@@ -1,0 +1,421 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+  Alert,
+} from 'react-native';
+import Card from '../../components/common/Card';
+import { Colors } from '../../constants/colors';
+import { Typography } from '../../constants/typography';
+import { Spacing } from '../../constants/spacing';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../store/slices/authSlice';
+import { AppDispatch } from '../../store';
+import { useNavigation, CommonActions } from '@react-navigation/native';
+
+const SettingsScreen: React.FC = () => {
+  const [notifications, setNotifications] = useState(true);
+  const [locationServices, setLocationServices] = useState(true);
+  const [autoSync, setAutoSync] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation();
+
+  const settingsSections = [
+    {
+      title: '계정',
+      items: [
+        {
+          id: 'profile',
+          title: '프로필 정보',
+          subtitle: '개인정보 수정',
+          icon: '👤',
+          type: 'navigate',
+        },
+        {
+          id: 'password',
+          title: '비밀번호 변경',
+          subtitle: '보안을 위한 비밀번호 변경',
+          icon: '🔒',
+          type: 'navigate',
+        },
+        {
+          id: 'role',
+          title: '역할 설정',
+          subtitle: '환자 / 보호자 역할 변경',
+          icon: '🔄',
+          type: 'navigate',
+        },
+      ],
+    },
+    {
+      title: '알림',
+      items: [
+        {
+          id: 'notifications',
+          title: '푸시 알림',
+          subtitle: '운동 알림 및 상태 업데이트',
+          icon: '🔔',
+          type: 'switch',
+          value: notifications,
+          onValueChange: setNotifications,
+        },
+        {
+          id: 'reminders',
+          title: '운동 알림',
+          subtitle: '정기적인 운동 알림',
+          icon: '⏰',
+          type: 'navigate',
+        },
+        {
+          id: 'emergency',
+          title: '긴급 알림',
+          subtitle: '긴급 상황 시 알림',
+          icon: '🚨',
+          type: 'navigate',
+        },
+      ],
+    },
+    {
+      title: '개인정보',
+      items: [
+        {
+          id: 'location',
+          title: '위치 서비스',
+          subtitle: '실외 운동 시 위치 추적',
+          icon: '📍',
+          type: 'switch',
+          value: locationServices,
+          onValueChange: setLocationServices,
+        },
+        {
+          id: 'health',
+          title: '건강 데이터',
+          subtitle: '건강 정보 공유 설정',
+          icon: '❤️',
+          type: 'navigate',
+        },
+        {
+          id: 'privacy',
+          title: '개인정보 보호',
+          subtitle: '데이터 수집 및 사용',
+          icon: '🛡️',
+          type: 'navigate',
+        },
+      ],
+    },
+    {
+      title: '앱 설정',
+      items: [
+        {
+          id: 'sync',
+          title: '자동 동기화',
+          subtitle: '데이터 자동 백업',
+          icon: '☁️',
+          type: 'switch',
+          value: autoSync,
+          onValueChange: setAutoSync,
+        },
+        {
+          id: 'theme',
+          title: '다크 모드',
+          subtitle: '어두운 테마 사용',
+          icon: '🌙',
+          type: 'switch',
+          value: darkMode,
+          onValueChange: setDarkMode,
+        },
+        {
+          id: 'language',
+          title: '언어 설정',
+          subtitle: '한국어',
+          icon: '🌐',
+          type: 'navigate',
+        },
+      ],
+    },
+    {
+      title: '지원',
+      items: [
+        {
+          id: 'help',
+          title: '도움말',
+          subtitle: '사용법 및 FAQ',
+          icon: '❓',
+          type: 'navigate',
+        },
+        {
+          id: 'contact',
+          title: '고객 지원',
+          subtitle: '문의 및 피드백',
+          icon: '💬',
+          type: 'navigate',
+        },
+        {
+          id: 'about',
+          title: '앱 정보',
+          subtitle: '버전 1.0.0',
+          icon: 'ℹ️',
+          type: 'navigate',
+        },
+      ],
+    },
+  ];
+
+  const handleLogout = () => {
+    Alert.alert(
+      '로그아웃',
+      '정말 로그아웃하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '로그아웃', style: 'destructive', onPress: () => {
+          dispatch(logout());
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'RoleSelection' }],
+            })
+          );
+        }},
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      '계정 삭제',
+      '계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 정말 삭제하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '삭제', style: 'destructive', onPress: () => {
+          // 계정 삭제 로직
+          console.log('계정 삭제');
+        }},
+      ]
+    );
+  };
+
+  const renderSettingItem = (item: any) => {
+    return (
+      <TouchableOpacity
+        key={item.id}
+        style={styles.settingItem}
+        onPress={() => {
+          if (item.type === 'navigate') {
+            // 네비게이션 로직
+            console.log('Navigate to:', item.id);
+          }
+        }}
+      >
+        <View style={styles.settingIcon}>
+          <Text style={styles.settingIconText}>{item.icon}</Text>
+        </View>
+        <View style={styles.settingContent}>
+          <Text style={styles.settingTitle}>{item.title}</Text>
+          <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
+        </View>
+        {item.type === 'switch' ? (
+          <Switch
+            value={item.value}
+            onValueChange={item.onValueChange}
+            trackColor={{ false: Colors.borderLight, true: Colors.primary + '40' }}
+            thumbColor={item.value ? Colors.primary : Colors.textLight}
+          />
+        ) : (
+          <Text style={styles.settingArrow}>›</Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>설정</Text>
+          <Text style={styles.subtitle}>앱 설정을 관리하세요</Text>
+        </View>
+
+        {/* Settings Sections */}
+        {settingsSections.map((section, sectionIndex) => (
+          <View key={sectionIndex} style={styles.section}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <Card style={styles.sectionCard}>
+              {section.items.map((item, itemIndex) => (
+                <View key={item.id}>
+                  {renderSettingItem(item)}
+                  {itemIndex < section.items.length - 1 && (
+                    <View style={styles.divider} />
+                  )}
+                </View>
+              ))}
+            </Card>
+          </View>
+        ))}
+
+        {/* Account Actions */}
+        <View style={styles.accountSection}>
+          <Text style={styles.sectionTitle}>계정 관리</Text>
+          <Card style={styles.accountCard}>
+            <TouchableOpacity style={styles.accountItem} onPress={handleLogout}>
+              <View style={styles.accountIcon}>
+                <Text style={styles.accountIconText}>🚪</Text>
+              </View>
+              <Text style={styles.accountTitle}>로그아웃</Text>
+              <Text style={styles.settingArrow}>›</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity style={styles.accountItem} onPress={handleDeleteAccount}>
+              <View style={styles.accountIcon}>
+                <Text style={styles.accountIconText}>🗑️</Text>
+              </View>
+              <Text style={[styles.accountTitle, styles.dangerText]}>계정 삭제</Text>
+              <Text style={styles.settingArrow}>›</Text>
+            </TouchableOpacity>
+          </Card>
+        </View>
+
+        {/* App Info */}
+        <View style={styles.infoSection}>
+          <Text style={styles.infoText}>재활 치료 앱 v1.0.0</Text>
+          <Text style={styles.infoText}>© 2024 RehabCare. All rights reserved.</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  scrollContent: {
+    paddingBottom: Spacing.sectionSpacing,
+  },
+  header: {
+    paddingHorizontal: Spacing.paddingLarge,
+    paddingTop: Spacing.sectionSpacing,
+    paddingBottom: Spacing.componentSpacing,
+  },
+  title: {
+    ...Typography.h1,
+    color: Colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
+  },
+  subtitle: {
+    ...Typography.body,
+    color: Colors.textLight,
+  },
+  section: {
+    paddingHorizontal: Spacing.paddingLarge,
+    marginBottom: Spacing.sectionSpacing,
+  },
+  sectionTitle: {
+    ...Typography.h2,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.componentSpacing,
+    fontWeight: '600',
+  },
+  sectionCard: {
+    padding: 0,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.componentSpacing,
+    paddingHorizontal: Spacing.padding,
+  },
+  settingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.componentSpacing,
+  },
+  settingIconText: {
+    fontSize: 18,
+  },
+  settingContent: {
+    flex: 1,
+  },
+  settingTitle: {
+    ...Typography.body,
+    color: Colors.textPrimary,
+    fontWeight: '500',
+    marginBottom: Spacing.xs,
+  },
+  settingSubtitle: {
+    ...Typography.caption,
+    color: Colors.textLight,
+  },
+  settingArrow: {
+    ...Typography.h3,
+    color: Colors.textLight,
+    fontWeight: '300',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.borderLight,
+    marginLeft: 56 + Spacing.componentSpacing,
+  },
+  accountSection: {
+    paddingHorizontal: Spacing.paddingLarge,
+    marginBottom: Spacing.sectionSpacing,
+  },
+  accountCard: {
+    padding: 0,
+  },
+  accountItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.componentSpacing,
+    paddingHorizontal: Spacing.padding,
+  },
+  accountIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.componentSpacing,
+  },
+  accountIconText: {
+    fontSize: 18,
+  },
+  accountTitle: {
+    ...Typography.body,
+    color: Colors.textPrimary,
+    fontWeight: '500',
+    flex: 1,
+  },
+  dangerText: {
+    color: '#F44336',
+  },
+  infoSection: {
+    paddingHorizontal: Spacing.paddingLarge,
+    alignItems: 'center',
+  },
+  infoText: {
+    ...Typography.caption,
+    color: Colors.textLight,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
+  },
+});
+
+export default SettingsScreen; 

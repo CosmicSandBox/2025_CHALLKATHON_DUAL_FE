@@ -1,20 +1,25 @@
+import React, { useEffect } from 'react';
+import { Provider, useDispatch } from 'react-redux';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { store, AppDispatch } from './src/store';
+import RootNavigator from './src/navigation/RootNavigator';
+import { Colors } from './src/constants/colors';
+import { loadStoredAuthState } from './src/store/slices/authSlice';
+
+function Bootstrapper() {
+  const dispatch = useDispatch<AppDispatch>();
+  useEffect(() => {
+    dispatch(loadStoredAuthState());
+  }, [dispatch]);
+  return null;
+}
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Provider store={store}>
+      <Bootstrapper />
+      <StatusBar style="dark" backgroundColor={Colors.background} />
+      <RootNavigator />
+    </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
