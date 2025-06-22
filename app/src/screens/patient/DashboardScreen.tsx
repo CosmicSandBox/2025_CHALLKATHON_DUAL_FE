@@ -7,25 +7,27 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
+import { RootStackParamList } from '../../navigation/types';
+
+type DashboardScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
 const DashboardScreen: React.FC = () => {
+  const navigation = useNavigation<DashboardScreenNavigationProp>();
+
   // Mock data
   const todayStats = {
     steps: 3247,
     exerciseTime: 45,
     averagePain: 3,
+    calories: 156,
+    distance: 2.1,
   };
-
-  const quickActions = [
-    { title: '실내 운동', subtitle: '오늘의 실내 운동 기록', icon: '🏠', color: '#4CAF50' },
-    { title: '실외 운동', subtitle: '오늘의 실외 운동 기록', icon: '🌳', color: '#2196F3' },
-    { title: '통증 기록', subtitle: '오늘의 통증 상태 기록', icon: '📊', color: '#FF9800' },
-    { title: '운동 기록', subtitle: '전체 운동 기록 보기', icon: '📈', color: '#9C27B0' },
-  ];
 
   const weeklyData = [
     { day: '월', steps: 2800, pain: 2 },
@@ -36,6 +38,56 @@ const DashboardScreen: React.FC = () => {
     { day: '토', steps: 3800, pain: 2 },
     { day: '일', steps: 3247, pain: 3 },
   ];
+
+  const recentActivities = [
+    {
+      id: '1',
+      type: 'outdoor',
+      title: '실외 운동 완료',
+      time: '오후 3:30',
+      value: '2.5km',
+      duration: '45분',
+    },
+    {
+      id: '2',
+      type: 'pain',
+      title: '통증 기록',
+      time: '오후 2:15',
+      value: '3/10',
+    },
+    {
+      id: '3',
+      type: 'indoor',
+      title: '실내 운동 시작',
+      time: '오전 10:00',
+      value: '45분',
+    },
+  ];
+
+  const handleIndoorExercise = () => {
+    // 실내 운동 화면으로 네비게이션
+    navigation.navigate('IndoorExercise' as never);
+  };
+
+  const handleOutdoorExercise = () => {
+    // 실외 운동 화면으로 네비게이션
+    navigation.navigate('OutdoorExercise' as never);
+  };
+
+  const handlePainRecord = () => {
+    // 통증 기록 화면으로 네비게이션 (임시로 알림)
+    console.log('통증 기록 화면으로 이동');
+  };
+
+  const handleExerciseHistory = () => {
+    // 운동 기록 화면으로 네비게이션 (임시로 알림)
+    console.log('운동 기록 화면으로 이동');
+  };
+
+  const handleSettings = () => {
+    // 설정 화면으로 네비게이션
+    navigation.navigate('Settings' as never);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -49,60 +101,91 @@ const DashboardScreen: React.FC = () => {
             <Text style={styles.greeting}>안녕하세요 👋</Text>
             <Text style={styles.name}>홍길동님</Text>
           </View>
-          <View style={styles.profileContainer}>
-            <Text style={styles.profileIcon}>👤</Text>
-          </View>
+          <TouchableOpacity style={styles.settingsButton} onPress={handleSettings}>
+            <View style={styles.settingsIconContainer}>
+              <Text style={styles.settingsIcon}>⚙️</Text>
+            </View>
+            <Text style={styles.settingsText}>설정</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Today's Summary */}
+        {/* Today's Summary - 토스 스타일 */}
         <View style={styles.summarySection}>
           <Text style={styles.sectionTitle}>오늘의 요약</Text>
-          <View style={styles.summaryCards}>
-            <Card style={styles.summaryCard}>
-              <View style={styles.summaryContent}>
-                <Text style={styles.summaryIcon}>👟</Text>
-                <View style={styles.summaryText}>
-                  <Text style={styles.summaryValue}>{todayStats.steps.toLocaleString()}</Text>
-                  <Text style={styles.summaryLabel}>걸음</Text>
+          <Card style={styles.summaryCard}>
+            <View style={styles.summaryGrid}>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>{todayStats.steps.toLocaleString()}</Text>
+                <Text style={styles.summaryLabel}>걸음</Text>
+              </View>
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>{todayStats.exerciseTime}분</Text>
+                <Text style={styles.summaryLabel}>운동</Text>
+              </View>
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>{todayStats.averagePain}/10</Text>
+                <Text style={styles.summaryLabel}>통증</Text>
+              </View>
+            </View>
+            <View style={styles.summaryFooter}>
+              <View style={styles.summaryFooterItem}>
+                <Text style={styles.summaryFooterLabel}>소모 칼로리</Text>
+                <Text style={styles.summaryFooterValue}>{todayStats.calories}kcal</Text>
+              </View>
+              <View style={styles.summaryFooterItem}>
+                <Text style={styles.summaryFooterLabel}>이동 거리</Text>
+                <Text style={styles.summaryFooterValue}>{todayStats.distance}km</Text>
+              </View>
+            </View>
+          </Card>
+        </View>
+
+        {/* Quick Actions - 실내/실외 가시적 구분 */}
+        <View style={styles.actionsSection}>
+          <Text style={styles.sectionTitle}>빠른 시작</Text>
+          <View style={styles.actionsContainer}>
+            {/* 실내 운동 */}
+            <TouchableOpacity style={styles.indoorAction} onPress={handleIndoorExercise}>
+              <View style={styles.actionContent}>
+                <View style={styles.actionHeader}>
+                  <Text style={styles.actionTitle}>실내 운동</Text>
+                  <Text style={styles.actionSubtitle}>재활 운동 및 스트레칭</Text>
+                </View>
+                <View style={styles.actionBadge}>
+                  <Text style={styles.actionBadgeText}>추천</Text>
                 </View>
               </View>
-            </Card>
-            
-            <Card style={styles.summaryCard}>
-              <View style={styles.summaryContent}>
-                <Text style={styles.summaryIcon}>⏱️</Text>
-                <View style={styles.summaryText}>
-                  <Text style={styles.summaryValue}>{todayStats.exerciseTime}분</Text>
-                  <Text style={styles.summaryLabel}>운동</Text>
+            </TouchableOpacity>
+
+            {/* 실외 운동 */}
+            <TouchableOpacity style={styles.outdoorAction} onPress={handleOutdoorExercise}>
+              <View style={styles.actionContent}>
+                <View style={styles.actionHeader}>
+                  <Text style={styles.actionTitle}>실외 운동</Text>
+                  <Text style={styles.actionSubtitle}>걷기 및 유산소 운동</Text>
+                </View>
+                <View style={styles.actionBadge}>
+                  <Text style={styles.actionBadgeText}>선택</Text>
                 </View>
               </View>
-            </Card>
-            
-            <Card style={styles.summaryCard}>
-              <View style={styles.summaryContent}>
-                <Text style={styles.summaryIcon}>😐</Text>
-                <View style={styles.summaryText}>
-                  <Text style={styles.summaryValue}>{todayStats.averagePain}/10</Text>
-                  <Text style={styles.summaryLabel}>통증</Text>
-                </View>
-              </View>
-            </Card>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Quick Actions */}
-        <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>빠른 시작</Text>
-          <View style={styles.actionsGrid}>
-            {quickActions.map((action, index) => (
-              <TouchableOpacity key={index} style={styles.actionCard}>
-                <View style={[styles.actionIcon, { backgroundColor: action.color + '20' }]}>
-                  <Text style={styles.actionIconText}>{action.icon}</Text>
-                </View>
-                <Text style={styles.actionTitle}>{action.title}</Text>
-                <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
-              </TouchableOpacity>
-            ))}
+        {/* Additional Actions */}
+        <View style={styles.additionalActionsSection}>
+          <View style={styles.additionalActionsGrid}>
+            <TouchableOpacity style={styles.additionalAction} onPress={handlePainRecord}>
+              <Text style={styles.additionalActionTitle}>통증 기록</Text>
+              <Text style={styles.additionalActionSubtitle}>오늘의 통증 상태</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.additionalAction} onPress={handleExerciseHistory}>
+              <Text style={styles.additionalActionTitle}>운동 기록</Text>
+              <Text style={styles.additionalActionSubtitle}>전체 기록 보기</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -112,7 +195,9 @@ const DashboardScreen: React.FC = () => {
           <Card style={styles.progressCard}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressTitle}>주간 걸음 수</Text>
-              <Text style={styles.progressTotal}>{weeklyData.reduce((sum, day) => sum + day.steps, 0).toLocaleString()} 걸음</Text>
+              <Text style={styles.progressTotal}>
+                {weeklyData.reduce((sum, day) => sum + day.steps, 0).toLocaleString()} 걸음
+              </Text>
             </View>
             <View style={styles.progressBars}>
               {weeklyData.map((day, index) => (
@@ -129,6 +214,7 @@ const DashboardScreen: React.FC = () => {
                     />
                   </View>
                   <Text style={styles.progressDay}>{day.day}</Text>
+                  <Text style={styles.progressSteps}>{day.steps.toLocaleString()}</Text>
                 </View>
               ))}
             </View>
@@ -139,36 +225,34 @@ const DashboardScreen: React.FC = () => {
         <View style={styles.activitySection}>
           <Text style={styles.sectionTitle}>최근 활동</Text>
           <Card style={styles.activityCard}>
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Text style={styles.activityIconText}>🏃‍♂️</Text>
+            {recentActivities.map((activity, index) => (
+              <View key={activity.id} style={[
+                styles.activityItem,
+                index === recentActivities.length - 1 && styles.activityItemLast
+              ]}>
+                <View style={[
+                  styles.activityIcon,
+                  activity.type === 'indoor' && styles.activityIconIndoor,
+                  activity.type === 'outdoor' && styles.activityIconOutdoor,
+                  activity.type === 'pain' && styles.activityIconPain,
+                ]}>
+                  <Text style={styles.activityIconText}>
+                    {activity.type === 'indoor' ? '🏠' : 
+                     activity.type === 'outdoor' ? '🌳' : '📊'}
+                  </Text>
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>{activity.title}</Text>
+                  <Text style={styles.activityTime}>{activity.time}</Text>
+                </View>
+                <View style={styles.activityValueContainer}>
+                  <Text style={styles.activityValue}>{activity.value}</Text>
+                  {activity.duration && (
+                    <Text style={styles.activityDuration}>{activity.duration}</Text>
+                  )}
+                </View>
               </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>실외 운동 완료</Text>
-                <Text style={styles.activityTime}>오후 3:30</Text>
-              </View>
-              <Text style={styles.activityValue}>2.5km</Text>
-            </View>
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Text style={styles.activityIconText}>📊</Text>
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>통증 기록</Text>
-                <Text style={styles.activityTime}>오후 2:15</Text>
-              </View>
-              <Text style={styles.activityValue}>3/10</Text>
-            </View>
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Text style={styles.activityIconText}>🏠</Text>
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>실내 운동 시작</Text>
-                <Text style={styles.activityTime}>오전 10:00</Text>
-              </View>
-              <Text style={styles.activityValue}>45분</Text>
-            </View>
+            ))}
           </Card>
         </View>
       </ScrollView>
@@ -202,16 +286,35 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontWeight: '700',
   },
-  profileContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  settingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    paddingHorizontal: Spacing.padding,
+    paddingVertical: Spacing.sm,
+    borderRadius: Spacing.cardRadius,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  settingsIconContainer: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: Colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: Spacing.xs,
   },
-  profileIcon: {
-    fontSize: 24,
+  settingsIcon: {
+    fontSize: 12,
+  },
+  settingsText: {
+    ...Typography.bodySmall,
+    color: Colors.textPrimary,
+    fontWeight: '500',
   },
   summarySection: {
     paddingHorizontal: Spacing.paddingLarge,
@@ -223,28 +326,20 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.componentSpacing,
     fontWeight: '600',
   },
-  summaryCards: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   summaryCard: {
-    flex: 1,
-    marginHorizontal: Spacing.xs,
     padding: Spacing.padding,
   },
-  summaryContent: {
+  summaryGrid: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: Spacing.componentSpacing,
   },
-  summaryIcon: {
-    fontSize: 24,
-    marginRight: Spacing.sm,
-  },
-  summaryText: {
+  summaryItem: {
     flex: 1,
+    alignItems: 'center',
   },
   summaryValue: {
-    ...Typography.h3,
+    ...Typography.h2,
     color: Colors.textPrimary,
     fontWeight: '700',
     marginBottom: Spacing.xs,
@@ -253,48 +348,109 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: Colors.textLight,
   },
+  summaryDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: Colors.borderLight,
+  },
+  summaryFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: Spacing.componentSpacing,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+  },
+  summaryFooterItem: {
+    alignItems: 'center',
+  },
+  summaryFooterLabel: {
+    ...Typography.caption,
+    color: Colors.textLight,
+    marginBottom: Spacing.xs,
+  },
+  summaryFooterValue: {
+    ...Typography.body,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
   actionsSection: {
     paddingHorizontal: Spacing.paddingLarge,
     marginBottom: Spacing.sectionSpacing,
   },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  actionsContainer: {
+    gap: Spacing.componentSpacing,
   },
-  actionCard: {
-    width: '48%',
+  indoorAction: {
+    backgroundColor: '#E8F5E8',
+    borderRadius: Spacing.cardRadius,
+    padding: Spacing.padding,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+  },
+  outdoorAction: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: Spacing.cardRadius,
+    padding: Spacing.padding,
+    borderWidth: 2,
+    borderColor: '#2196F3',
+  },
+  actionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  actionHeader: {
+    flex: 1,
+  },
+  actionTitle: {
+    ...Typography.h3,
+    color: Colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
+  },
+  actionSubtitle: {
+    ...Typography.body,
+    color: Colors.textLight,
+  },
+  actionBadge: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Spacing.cardRadius,
+  },
+  actionBadgeText: {
+    ...Typography.caption,
+    color: Colors.background,
+    fontWeight: '600',
+  },
+  additionalActionsSection: {
+    paddingHorizontal: Spacing.paddingLarge,
+    marginBottom: Spacing.sectionSpacing,
+  },
+  additionalActionsGrid: {
+    flexDirection: 'row',
+    gap: Spacing.componentSpacing,
+  },
+  additionalAction: {
+    flex: 1,
     backgroundColor: Colors.background,
     borderRadius: Spacing.cardRadius,
     padding: Spacing.padding,
-    marginBottom: Spacing.componentSpacing,
     shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
-  actionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  actionIconText: {
-    fontSize: 24,
-  },
-  actionTitle: {
+  additionalActionTitle: {
     ...Typography.body,
     color: Colors.textPrimary,
     fontWeight: '600',
     marginBottom: Spacing.xs,
   },
-  actionSubtitle: {
+  additionalActionSubtitle: {
     ...Typography.caption,
     color: Colors.textLight,
-    lineHeight: 16,
   },
   progressSection: {
     paddingHorizontal: Spacing.paddingLarge,
@@ -323,7 +479,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    height: 120,
+    height: 160,
   },
   progressBarContainer: {
     flex: 1,
@@ -347,6 +503,12 @@ const styles = StyleSheet.create({
   progressDay: {
     ...Typography.caption,
     color: Colors.textLight,
+    marginBottom: Spacing.xs,
+  },
+  progressSteps: {
+    ...Typography.caption,
+    color: Colors.textPrimary,
+    fontSize: 10,
   },
   activitySection: {
     paddingHorizontal: Spacing.paddingLarge,
@@ -362,14 +524,25 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
+  activityItemLast: {
+    borderBottomWidth: 0,
+  },
   activityIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.componentSpacing,
+  },
+  activityIconIndoor: {
+    backgroundColor: '#E8F5E8',
+  },
+  activityIconOutdoor: {
+    backgroundColor: '#E3F2FD',
+  },
+  activityIconPain: {
+    backgroundColor: '#FFF3E0',
   },
   activityIconText: {
     fontSize: 18,
@@ -387,10 +560,18 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: Colors.textLight,
   },
+  activityValueContainer: {
+    alignItems: 'flex-end',
+  },
   activityValue: {
     ...Typography.body,
     color: Colors.primary,
     fontWeight: '600',
+  },
+  activityDuration: {
+    ...Typography.caption,
+    color: Colors.textLight,
+    marginTop: Spacing.xs,
   },
 });
 

@@ -5,6 +5,9 @@ export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
+  IndoorExercise: undefined;
+  OutdoorExercise: undefined;
+  Settings: undefined;
 };
 
 export type AuthStackParamList = {

@@ -8,6 +8,9 @@ import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 import AuthNavigator from './AuthNavigator';
 import OnboardingNavigator from './OnboardingNavigator';
 import MainNavigator from './MainNavigator';
+import IndoorExerciseScreen from '../screens/patient/IndoorExerciseScreen';
+import OutdoorExerciseScreen from '../screens/patient/OutdoorExerciseScreen';
+import SettingsScreen from '../screens/settings/SettingsScreen';
 
 import { RootStackParamList } from './types';
 
@@ -30,7 +33,12 @@ const RootNavigator: React.FC = () => {
         ) : !onboardingCompleted ? (
           <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
         ) : (
-          <Stack.Screen name="Main" component={MainNavigator} />
+          <>
+            <Stack.Screen name="Main" component={MainNavigator} />
+            <Stack.Screen name="IndoorExercise" component={IndoorExerciseScreen} />
+            <Stack.Screen name="OutdoorExercise" component={OutdoorExerciseScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

@@ -9,6 +9,9 @@ import {
   Switch,
   Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { CommonActions } from '@react-navigation/native';
 import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
@@ -16,7 +19,9 @@ import { Spacing } from '../../constants/spacing';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import { AppDispatch } from '../../store';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { RootStackParamList } from '../../navigation/types';
+
+type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
 const SettingsScreen: React.FC = () => {
   const [notifications, setNotifications] = useState(true);
@@ -25,7 +30,11 @@ const SettingsScreen: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<SettingsScreenNavigationProp>();
+
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
 
   const settingsSections = [
     {
@@ -236,16 +245,21 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header with Back Button */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>설정</Text>
+          <Text style={styles.subtitle}>앱 설정을 관리하세요</Text>
+        </View>
+      </View>
+
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>설정</Text>
-          <Text style={styles.subtitle}>앱 설정을 관리하세요</Text>
-        </View>
-
         {/* Settings Sections */}
         {settingsSections.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.section}>
@@ -263,32 +277,16 @@ const SettingsScreen: React.FC = () => {
           </View>
         ))}
 
-        {/* Account Actions */}
-        <View style={styles.accountSection}>
-          <Text style={styles.sectionTitle}>계정 관리</Text>
-          <Card style={styles.accountCard}>
-            <TouchableOpacity style={styles.accountItem} onPress={handleLogout}>
-              <View style={styles.accountIcon}>
-                <Text style={styles.accountIconText}>🚪</Text>
-              </View>
-              <Text style={styles.accountTitle}>로그아웃</Text>
-              <Text style={styles.settingArrow}>›</Text>
+        {/* Logout and Delete Account */}
+        <View style={styles.dangerSection}>
+          <Card style={styles.dangerCard}>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Text style={styles.logoutButtonText}>로그아웃</Text>
             </TouchableOpacity>
-            <View style={styles.divider} />
-            <TouchableOpacity style={styles.accountItem} onPress={handleDeleteAccount}>
-              <View style={styles.accountIcon}>
-                <Text style={styles.accountIconText}>🗑️</Text>
-              </View>
-              <Text style={[styles.accountTitle, styles.dangerText]}>계정 삭제</Text>
-              <Text style={styles.settingArrow}>›</Text>
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
+              <Text style={styles.deleteButtonText}>계정 삭제</Text>
             </TouchableOpacity>
           </Card>
-        </View>
-
-        {/* App Info */}
-        <View style={styles.infoSection}>
-          <Text style={styles.infoText}>재활 치료 앱 v1.0.0</Text>
-          <Text style={styles.infoText}>© 2024 RehabCare. All rights reserved.</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -300,13 +298,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  scrollContent: {
-    paddingBottom: Spacing.sectionSpacing,
-  },
-  header: {
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: Spacing.paddingLarge,
     paddingTop: Spacing.sectionSpacing,
     paddingBottom: Spacing.componentSpacing,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.componentSpacing,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: Colors.textPrimary,
+    fontWeight: '600',
+  },
+  headerContent: {
+    flex: 1,
   },
   title: {
     ...Typography.h1,
@@ -317,6 +336,9 @@ const styles = StyleSheet.create({
   subtitle: {
     ...Typography.body,
     color: Colors.textLight,
+  },
+  scrollContent: {
+    paddingBottom: Spacing.sectionSpacing,
   },
   section: {
     paddingHorizontal: Spacing.paddingLarge,
@@ -372,49 +394,36 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.borderLight,
     marginLeft: 56 + Spacing.componentSpacing,
   },
-  accountSection: {
+  dangerSection: {
     paddingHorizontal: Spacing.paddingLarge,
     marginBottom: Spacing.sectionSpacing,
   },
-  accountCard: {
+  dangerCard: {
     padding: 0,
   },
-  accountItem: {
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: Spacing.componentSpacing,
     paddingHorizontal: Spacing.padding,
   },
-  accountIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.componentSpacing,
-  },
-  accountIconText: {
-    fontSize: 18,
-  },
-  accountTitle: {
+  logoutButtonText: {
     ...Typography.body,
     color: Colors.textPrimary,
     fontWeight: '500',
     flex: 1,
   },
-  dangerText: {
-    color: '#F44336',
-  },
-  infoSection: {
-    paddingHorizontal: Spacing.paddingLarge,
+  deleteButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: Spacing.componentSpacing,
+    paddingHorizontal: Spacing.padding,
   },
-  infoText: {
-    ...Typography.caption,
-    color: Colors.textLight,
-    textAlign: 'center',
-    marginBottom: Spacing.xs,
+  deleteButtonText: {
+    ...Typography.body,
+    color: '#F44336',
+    fontWeight: '500',
+    flex: 1,
   },
 });
 

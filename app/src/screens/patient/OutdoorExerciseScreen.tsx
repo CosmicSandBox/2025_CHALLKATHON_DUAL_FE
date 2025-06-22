@@ -8,12 +8,18 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
+import { RootStackParamList } from '../../navigation/types';
+
+type OutdoorExerciseScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
 const OutdoorExerciseScreen: React.FC = () => {
+  const navigation = useNavigation<OutdoorExerciseScreenNavigationProp>();
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
   const [isExerciseStarted, setIsExerciseStarted] = useState(false);
   const [currentDistance, setCurrentDistance] = useState(0);
@@ -79,6 +85,29 @@ const OutdoorExerciseScreen: React.FC = () => {
     windSpeed: 3,
   };
 
+  const handleGoBack = () => {
+    if (isExerciseStarted) {
+      Alert.alert(
+        '운동 중',
+        '운동이 진행 중입니다. 정말 나가시겠습니까?',
+        [
+          { text: '취소', style: 'cancel' },
+          { 
+            text: '나가기', 
+            onPress: () => {
+              setIsExerciseStarted(false);
+              setSelectedRoute(null);
+              setCurrentDistance(0);
+              navigation.goBack();
+            }
+          },
+        ]
+      );
+    } else {
+      navigation.goBack();
+    }
+  };
+
   const startExercise = () => {
     if (!selectedRoute) {
       Alert.alert('경로 선택', '운동 경로를 선택해주세요.');
@@ -108,16 +137,21 @@ const OutdoorExerciseScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header with Back Button */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>실외 운동</Text>
+          <Text style={styles.subtitle}>자연 속에서 건강한 운동을 시작해보세요</Text>
+        </View>
+      </View>
+
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>실외 운동</Text>
-          <Text style={styles.subtitle}>자연 속에서 건강한 운동을 시작해보세요</Text>
-        </View>
-
         {/* Weather Info */}
         <View style={styles.weatherSection}>
           <Card style={styles.weatherCard}>
@@ -285,13 +319,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  scrollContent: {
-    paddingBottom: Spacing.sectionSpacing,
-  },
-  header: {
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: Spacing.paddingLarge,
     paddingTop: Spacing.sectionSpacing,
     paddingBottom: Spacing.componentSpacing,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.componentSpacing,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: Colors.textPrimary,
+    fontWeight: '600',
+  },
+  headerContent: {
+    flex: 1,
   },
   title: {
     ...Typography.h1,
@@ -302,6 +357,9 @@ const styles = StyleSheet.create({
   subtitle: {
     ...Typography.body,
     color: Colors.textLight,
+  },
+  scrollContent: {
+    paddingBottom: Spacing.sectionSpacing,
   },
   weatherSection: {
     paddingHorizontal: Spacing.paddingLarge,
