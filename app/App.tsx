@@ -1,25 +1,31 @@
-import React, { useEffect } from 'react';
-import { Provider, useDispatch } from 'react-redux';
+import React from 'react';
+import { Provider } from 'react-redux';
 import { StatusBar } from 'expo-status-bar';
-import { store, AppDispatch } from './src/store';
+import { SafeAreaView, StyleSheet } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { store } from './src/store';
 import RootNavigator from './src/navigation/RootNavigator';
 import { Colors } from './src/constants/colors';
-import { loadStoredAuthState } from './src/store/slices/authSlice';
-
-function Bootstrapper() {
-  const dispatch = useDispatch<AppDispatch>();
-  useEffect(() => {
-    dispatch(loadStoredAuthState());
-  }, [dispatch]);
-  return null;
-}
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <Bootstrapper />
-      <StatusBar style="dark" backgroundColor={Colors.background} />
-      <RootNavigator />
-    </Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Provider store={store}>
+        <SafeAreaView style={styles.container}>
+          <StatusBar style="dark" />
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </SafeAreaView>
+      </Provider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+});

@@ -17,7 +17,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { useDispatch } from 'react-redux';
-import { logout } from '../../store/slices/authSlice';
+import { signOut } from '../../store/slices/authSlice';
 import { AppDispatch } from '../../store';
 import { RootStackParamList } from '../../navigation/types';
 import { Feather } from '@expo/vector-icons';
@@ -181,18 +181,10 @@ const SettingsScreen: React.FC = () => {
   const handleLogout = () => {
     Alert.alert(
       '로그아웃',
-      '정말 로그아웃하시겠습니까?',
+      '정말 로그아웃 하시겠습니까?',
       [
         { text: '취소', style: 'cancel' },
-        { text: '로그아웃', style: 'destructive', onPress: () => {
-          dispatch(logout());
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: 'RoleSelection' }],
-            })
-          );
-        }},
+        { text: '로그아웃', onPress: () => dispatch(signOut()) }
       ]
     );
   };

@@ -1,6 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/auth/LoginScreen';
+import LoginFormScreen from '../screens/auth/LoginFormScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import { AuthStackParamList } from './types';
@@ -26,6 +27,13 @@ const AuthNavigator: React.FC = () => {
       <Stack.Screen 
         name="Login" 
         component={LoginScreen}
+        options={{
+          title: '역할 선택',
+        }}
+      />
+      <Stack.Screen 
+        name="LoginForm" 
+        component={LoginFormScreen}
         options={{
           title: '로그인',
         }}

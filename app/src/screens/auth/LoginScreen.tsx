@@ -1,196 +1,99 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { loginStart, loginSuccess, loginFailure, logout } from '../../store/slices/authSlice';
-import { RootState } from '../../store';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthStackParamList } from '../../navigation/types';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
+import { setRole } from '../../store/slices/authSlice';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
+import { Feather } from '@expo/vector-icons';
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
+type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Signup'>;
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const dispatch = useDispatch();
-  const { isLoading, error, userRole } = useSelector((state: RootState) => state.auth);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validateForm = (): boolean => {
-    let isValid = true;
-
-    if (!email) {
-      setEmailError('이메일을 입력해주세요.');
-      isValid = false;
-    } else if (!validateEmail(email)) {
-      setEmailError('올바른 이메일 형식을 입력해주세요.');
-      isValid = false;
-    } else {
-      setEmailError('');
-    }
-
-    if (!password) {
-      setPasswordError('비밀번호를 입력해주세요.');
-      isValid = false;
-    } else if (password.length < 6) {
-      setPasswordError('비밀번호는 6자 이상이어야 합니다.');
-      isValid = false;
-    } else {
-      setPasswordError('');
-    }
-
-    return isValid;
-  };
-
-  const handleLogin = async () => {
-    if (!validateForm()) return;
-
-    dispatch(loginStart());
-
-    try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Mock successful login
-      const mockUser = {
-        id: '1',
-        email: email,
-        name: '홍길동',
-        role: userRole || 'patient',
-      };
-
-      dispatch(loginSuccess(mockUser));
-    } catch (error) {
-      dispatch(loginFailure('로그인에 실패했습니다. 다시 시도해주세요.'));
-    }
-  };
-
-  const handleGoogleLogin = () => {
-    Alert.alert('알림', 'Google 로그인 기능은 준비 중입니다.');
-  };
-
-  const handleForgotPassword = () => {
-    navigation.navigate('ResetPassword');
-  };
-
-  const handleSignup = () => {
-    navigation.navigate('Signup');
-  };
-
-  const handleChangeRole = () => {
-    Alert.alert(
-      '역할 변경',
-      '다른 역할로 변경하시겠습니까?',
-      [
-        { text: '취소', style: 'cancel' },
-        { text: '변경', onPress: () => {
-          dispatch(logout());
-        }}
-      ]
-    );
+  const handleRoleSelection = (role: 'patient' | 'caregiver') => {
+    dispatch(setRole(role));
+    // 역할 선택 후, 실제 로그인/회원가입을 진행할 별도의 화면으로 이동해야 합니다.
+    // 지금은 임시로 Signup으로 이동시킵니다.
+    navigation.navigate('LoginForm');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>로그인</Text>
-            <Text style={styles.subtitle}>
-              {userRole === 'patient' ? '환자' : '보호자'} 계정으로 로그인하세요
-            </Text>
-          </View>
-
-          {/* Form */}
-          <View style={styles.form}>
-            <Input
-              label="이메일"
-              placeholder="이메일을 입력하세요"
-              value={email}
-              onChangeText={setEmail}
-              error={emailError}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-
-            <Input
-              label="비밀번호"
-              placeholder="비밀번호를 입력하세요"
-              value={password}
-              onChangeText={setPassword}
-              error={passwordError}
-              secureTextEntry
-              autoCapitalize="none"
-            />
-
-            {error && (
-              <Text style={styles.errorText}>{error}</Text>
-            )}
-
-            <Button
-              title="로그인"
-              onPress={handleLogin}
-              loading={isLoading}
-              fullWidth
-              style={styles.loginButton}
-            />
-
-            <Button
-              title="Google로 로그인"
-              onPress={handleGoogleLogin}
-              variant="outline"
-              fullWidth
-              style={styles.googleButton}
-            />
-          </View>
-
-          {/* Links */}
-          <View style={styles.links}>
-            <TouchableOpacity onPress={handleForgotPassword}>
-              <Text style={styles.linkText}>비밀번호 찾기</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity onPress={handleSignup}>
-              <Text style={styles.linkText}>회원가입</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Change Role Button */}
-          <View style={styles.changeRoleContainer}>
-            <TouchableOpacity onPress={handleChangeRole}>
-              <Text style={styles.changeRoleText}>
-                다른 역할로 시작하기
-              </Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.title}>듀얼 시작하기</Text>
+          <Text style={styles.subtitle}>
+            어떤 역할로 서비스를 이용하시나요?
+          </Text>
         </View>
-      </ScrollView>
+
+        <View style={styles.selectionContainer}>
+          <TouchableOpacity 
+            style={styles.selectionButton} 
+            onPress={() => handleRoleSelection('patient')}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[Colors.primary, '#6366f1']}
+              style={styles.buttonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.buttonContent}>
+                <View style={styles.iconContainer}>
+                  <Feather name="user" size={28} color="#fff" />
+                </View>
+                <View style={styles.textContainer}>
+                  <Text style={styles.selectionTitle}>환자</Text>
+                  <Text style={styles.selectionDescription}>
+                    AI코칭을 통해 재활을 진행합니다
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color="#fff" />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.selectionButton} 
+            onPress={() => handleRoleSelection('caregiver')}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#10b981', '#059669']}
+              style={styles.buttonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.buttonContent}>
+                <View style={styles.iconContainer}>
+                  <Feather name="users" size={28} color="#fff" />
+                </View>
+                <View style={styles.textContainer}>
+                  <Text style={styles.selectionTitle}>보호자</Text>
+                  <Text style={styles.selectionDescription}>
+                    환자의 재활 과정을 돕습니다
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color="#fff" />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -200,13 +103,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  scrollContent: {
-    flexGrow: 1,
-  },
   content: {
     flex: 1,
-    paddingHorizontal: Spacing.paddingLarge,
-    paddingTop: Spacing.sectionSpacing,
+    justifyContent: 'center',
+    padding: Spacing.paddingLarge,
   },
   header: {
     alignItems: 'center',
@@ -215,46 +115,61 @@ const styles = StyleSheet.create({
   title: {
     ...Typography.h1,
     color: Colors.textPrimary,
-    marginBottom: Spacing.componentSpacing,
+    marginBottom: Spacing.sm,
+    fontWeight: '700',
   },
   subtitle: {
     ...Typography.body,
     color: Colors.textLight,
     textAlign: 'center',
+    maxWidth: '80%',
+    lineHeight: 24,
   },
-  form: {
-    marginBottom: Spacing.sectionSpacingLarge,
+  selectionContainer: {
+    gap: Spacing.componentSpacing,
   },
-  loginButton: {
-    marginTop: Spacing.componentSpacing,
+  selectionButton: {
+    borderRadius: Spacing.cardRadius,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  googleButton: {
-    marginTop: Spacing.componentSpacing,
+  buttonGradient: {
+    borderRadius: Spacing.cardRadius,
   },
-  errorText: {
-    ...Typography.caption,
-    color: Colors.error,
-    textAlign: 'center',
-    marginTop: Spacing.componentSpacing,
-  },
-  links: {
+  buttonContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    padding: Spacing.paddingLarge,
   },
-  linkText: {
-    ...Typography.body,
-    color: Colors.primary,
-    textDecorationLine: 'underline',
-  },
-  changeRoleContainer: {
-    marginTop: Spacing.componentSpacing,
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginRight: Spacing.componentSpacing,
   },
-  changeRoleText: {
+  textContainer: {
+    flex: 1,
+  },
+  selectionTitle: {
+    ...Typography.h3,
+    color: '#fff',
+    marginBottom: Spacing.xs,
+    fontWeight: '600',
+  },
+  selectionDescription: {
     ...Typography.body,
-    color: Colors.primary,
-    textDecorationLine: 'underline',
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
   },
 });
 

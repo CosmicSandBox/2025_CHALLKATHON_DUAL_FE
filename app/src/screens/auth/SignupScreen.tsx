@@ -11,7 +11,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { loginSuccess, logout } from '../../store/slices/authSlice';
+import { signIn, signOut } from '../../store/slices/authSlice';
 import { RootState } from '../../store';
 import { AuthStackParamList } from '../../navigation/types';
 import Button from '../../components/common/Button';
@@ -79,14 +79,12 @@ const SignupScreen: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Mock successful signup
-      const mockUser = {
-        id: '1',
-        email: email,
-        name: '홍길동',
-        role: userRole || 'patient',
-      };
-
-      dispatch(loginSuccess(mockUser));
+      const mockToken = 'mock-jwt-token';
+      
+      dispatch(signIn({ 
+        token: mockToken, 
+        role: userRole || 'patient' 
+      }));
     } catch (error) {
       Alert.alert('오류', '회원가입에 실패했습니다. 다시 시도해주세요.');
     } finally {
@@ -109,7 +107,7 @@ const SignupScreen: React.FC = () => {
       [
         { text: '취소', style: 'cancel' },
         { text: '변경', onPress: () => {
-          dispatch(logout());
+          dispatch(signOut());
         }}
       ]
     );
@@ -208,7 +206,10 @@ const SignupScreen: React.FC = () => {
           {/* Login Link */}
           <View style={styles.loginLink}>
             <Text style={styles.loginText}>이미 계정이 있으신가요? </Text>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
+            <TouchableOpacity onPress={() => {
+              console.log('로그인 버튼 클릭됨');
+              navigation.navigate('LoginForm');
+            }}>
               <Text style={styles.linkText}>로그인</Text>
             </TouchableOpacity>
           </View>

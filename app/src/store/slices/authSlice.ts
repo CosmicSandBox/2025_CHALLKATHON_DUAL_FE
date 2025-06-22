@@ -4,24 +4,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export type UserRole = 'patient' | 'caregiver';
 
 interface AuthState {
-  isAuthenticated: boolean;
+  userToken: string | null;
   userRole: UserRole | null;
-  onboardingCompleted: boolean;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    role: UserRole;
-  } | null;
+  onboardingComplete: boolean;
   isLoading: boolean;
   error: string | null;
 }
 
 const initialState: AuthState = {
-  isAuthenticated: false,
+  userToken: null,
   userRole: null,
-  onboardingCompleted: false,
-  user: null,
+  onboardingComplete: false,
   isLoading: false,
   error: null,
 };
@@ -71,69 +64,52 @@ export const saveOnboardingCompleted = createAsyncThunk(
   }
 );
 
-const authSlice = createSlice({
+export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUserRole: (state, action: PayloadAction<UserRole>) => {
+    restoreToken: (state, action: PayloadAction<{ token: string }>) => {
+      state.userToken = action.payload.token;
+      state.isLoading = false;
+    },
+    signIn: (state, action: PayloadAction<{ token: string; role: 'patient' | 'caregiver' }>) => {
+      state.userToken = action.payload.token;
+      state.userRole = action.payload.role;
+      state.isLoading = false;
+    },
+    signOut: (state) => {
+      state.userToken = null;
+      state.userRole = null;
+      state.onboardingComplete = false;
+    },
+    setRole: (state, action: PayloadAction<'patient' | 'caregiver'>) => {
       state.userRole = action.payload;
     },
-    loginStart: (state) => {
-      state.isLoading = true;
-      state.error = null;
-    },
-    loginSuccess: (state, action: PayloadAction<AuthState['user']>) => {
-      if (action.payload) {
-        state.isAuthenticated = true;
-        state.user = action.payload;
-        state.onboardingCompleted = true;
-      }
-      state.isLoading = false;
-      state.error = null;
-    },
-    loginFailure: (state, action: PayloadAction<string>) => {
-      state.isLoading = false;
-      state.error = action.payload;
-    },
     completeOnboarding: (state) => {
-      state.onboardingCompleted = true;
-    },
-    logout: (state) => {
-      state.isAuthenticated = false;
-      state.user = null;
-      state.userRole = null;
-      state.onboardingCompleted = false;
-      state.error = null;
-      AsyncStorage.removeItem('userRole');
-      AsyncStorage.removeItem('onboardingCompleted');
-    },
-    clearError: (state) => {
-      state.error = null;
+      state.onboardingComplete = true;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(loadStoredAuthState.fulfilled, (state, action) => {
         state.userRole = action.payload.userRole;
-        state.onboardingCompleted = action.payload.onboardingCompleted;
+        state.onboardingComplete = action.payload.onboardingCompleted;
       })
       .addCase(saveUserRole.fulfilled, (state, action) => {
         state.userRole = action.payload;
       })
       .addCase(saveOnboardingCompleted.fulfilled, (state) => {
-        state.onboardingCompleted = true;
+        state.onboardingComplete = true;
       });
   },
 });
 
 export const {
-  setUserRole,
-  loginStart,
-  loginSuccess,
-  loginFailure,
+  restoreToken,
+  signIn,
+  signOut,
+  setRole,
   completeOnboarding,
-  logout,
-  clearError,
 } = authSlice.actions;
 
 export default authSlice.reducer; 

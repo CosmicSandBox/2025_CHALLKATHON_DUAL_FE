@@ -2,9 +2,11 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 
 export type RootStackParamList = {
   RoleSelection: undefined;
-  Auth: NavigatorScreenParams<AuthStackParamList>;
-  Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
-  Main: NavigatorScreenParams<MainTabParamList>;
+  Auth: undefined;
+  OnboardingNavigator: undefined;
+  OnboardingFlow: undefined;
+  Main: undefined;
+  Caregiver: undefined;
   IndoorExercise: undefined;
   OutdoorExercise: undefined;
   Settings: undefined;
@@ -18,11 +20,13 @@ export type RootStackParamList = {
 
 export type AuthStackParamList = {
   Login: undefined;
+  LoginForm: undefined;
   Signup: undefined;
   ResetPassword: undefined;
 };
 
 export type OnboardingStackParamList = {
+  Onboarding: undefined;
   Permission: undefined;
   InviteCode: undefined;
 };
