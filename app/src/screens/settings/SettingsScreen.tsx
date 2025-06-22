@@ -20,6 +20,7 @@ import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import { AppDispatch } from '../../store';
 import { RootStackParamList } from '../../navigation/types';
+import { Feather } from '@expo/vector-icons';
 
 type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
@@ -245,14 +246,14 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with Back Button */}
-      <View style={styles.headerContainer}>
+      {/* Header */}
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Feather name="chevron-left" size={28} color="#A3A8AF" />
         </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>설정</Text>
-          <Text style={styles.subtitle}>앱 설정을 관리하세요</Text>
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.headerTitle}>설정</Text>
+          <Text style={styles.headerSubtitle}>앱 설정을 관리하세요</Text>
         </View>
       </View>
 
@@ -298,46 +299,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  headerContainer: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.paddingLarge,
-    paddingTop: Spacing.sectionSpacing,
-    paddingBottom: Spacing.componentSpacing,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
+    backgroundColor: '#F8F9FA',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.componentSpacing,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    marginRight: 8,
+    marginTop: 0,
   },
-  backButtonText: {
-    fontSize: 20,
-    color: Colors.textPrimary,
-    fontWeight: '600',
-  },
-  headerContent: {
+  headerTextContainer: {
     flex: 1,
   },
-  title: {
-    ...Typography.h1,
-    color: Colors.textPrimary,
+  headerTitle: {
+    fontSize: 22,
     fontWeight: '700',
-    marginBottom: Spacing.xs,
+    color: '#222',
+    marginBottom: 2,
   },
-  subtitle: {
-    ...Typography.body,
-    color: Colors.textLight,
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#A3A8AF',
+    fontWeight: '400',
   },
   scrollContent: {
+    paddingVertical: Spacing.sm,
     paddingBottom: Spacing.sectionSpacing,
   },
   section: {

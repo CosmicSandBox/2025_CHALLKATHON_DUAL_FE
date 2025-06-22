@@ -8,6 +8,12 @@ export type RootStackParamList = {
   IndoorExercise: undefined;
   OutdoorExercise: undefined;
   Settings: undefined;
+  WalkingMeasurement: undefined;
+  StretchingMeasurement: undefined;
+  StandingMeasurement: undefined;
+  SittingMeasurement: undefined;
+  BalanceMeasurement: undefined;
+  WalkingSupportMeasurement: undefined;
 };
 
 export type AuthStackParamList = {

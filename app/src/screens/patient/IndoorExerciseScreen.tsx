@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,121 +16,174 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { RootStackParamList } from '../../navigation/types';
+import { Feather } from '@expo/vector-icons';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 type IndoorExerciseScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
 const IndoorExerciseScreen: React.FC = () => {
   const navigation = useNavigation<IndoorExerciseScreenNavigationProp>();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
-  const [isExerciseStarted, setIsExerciseStarted] = useState(false);
-  const [exerciseTime, setExerciseTime] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  
+  const categories = [
+    { id: 'all', name: '전체', icon: '🏠' },
+    { id: 'walking', name: '걷기', icon: '🚶‍♂️' },
+    { id: 'strength', name: '근력', icon: '💪' },
+    { id: 'balance', name: '균형', icon: '⚖️' },
+  ];
 
   const exercises = [
     {
       id: '1',
-      name: '스트레칭',
-      description: '근육 이완과 유연성 향상',
-      duration: '10분',
+      name: '가벼운 걷기',
+      description: '실내에서 안전하게 걷기 운동',
+      duration: '10-15분',
       difficulty: '쉬움',
-      icon: '🧘‍♀️',
-      color: '#4CAF50',
+      icon: '🚶‍♂️',
+      color: '#00D4AA',
+      category: 'walking',
+      target: '걸음 수 측정',
+      benefits: ['근력 강화', '균형 감각 향상', '혈액순환 개선'],
+      lastCompleted: '2시간 전',
+      recommended: true,
     },
     {
       id: '2',
-      name: '근력 운동',
-      description: '근육 강화와 균형 감각 향상',
-      duration: '15분',
-      difficulty: '보통',
-      icon: '💪',
-      color: '#2196F3',
+      name: '다리 스트레칭',
+      description: '다리 근육 이완과 유연성 향상',
+      duration: '8-10분',
+      difficulty: '쉬움',
+      icon: '🧘‍♀️',
+      color: '#3182F6',
+      category: 'strength',
+      target: '관절 가동범위 측정',
+      benefits: ['근육 이완', '관절 유연성', '통증 완화'],
+      lastCompleted: '1일 전',
+      recommended: false,
     },
     {
       id: '3',
-      name: '균형 운동',
-      description: '균형 감각과 안정성 향상',
-      duration: '12분',
+      name: '서서하기 운동',
+      description: '서서하는 다리 근력 강화 운동',
+      duration: '12-15분',
       difficulty: '보통',
-      icon: '⚖️',
-      color: '#FF9800',
+      icon: '💪',
+      color: '#FF6B35',
+      category: 'strength',
+      target: '근력 측정',
+      benefits: ['근력 강화', '균형 감각', '일상생활 개선'],
+      lastCompleted: '3일 전',
+      recommended: true,
     },
     {
       id: '4',
-      name: '유산소 운동',
-      description: '심폐 기능과 지구력 향상',
-      duration: '20분',
-      difficulty: '어려움',
-      icon: '🏃‍♂️',
-      color: '#9C27B0',
+      name: '앉아서 다리 운동',
+      description: '앉은 자세에서 하는 다리 운동',
+      duration: '10-12분',
+      difficulty: '쉬움',
+      icon: '🪑',
+      color: '#8B5CF6',
+      category: 'strength',
+      target: '근력 측정',
+      benefits: ['근력 강화', '안정성', '통증 완화'],
+      lastCompleted: '5시간 전',
+      recommended: false,
+    },
+    {
+      id: '5',
+      name: '균형 운동',
+      description: '균형 감각과 안정성 향상',
+      duration: '8-10분',
+      difficulty: '보통',
+      icon: '⚖️',
+      color: '#F59E0B',
+      category: 'balance',
+      target: '균형 측정',
+      benefits: ['균형 감각', '안정성', '낙상 예방'],
+      lastCompleted: '1주일 전',
+      recommended: true,
+    },
+    {
+      id: '6',
+      name: '걷기 보조 운동',
+      description: '걷기 전 준비 운동',
+      duration: '5-8분',
+      difficulty: '쉬움',
+      icon: '🦯',
+      color: '#6B7280',
+      category: 'walking',
+      target: '보행 능력 측정',
+      benefits: ['보행 개선', '자신감 향상', '안전성'],
+      lastCompleted: '30분 전',
+      recommended: false,
     },
   ];
 
   const todayStats = {
     completed: 2,
-    total: 4,
-    time: 35,
+    total: 6,
+    time: 25,
+    streak: 5,
+    weeklyGoal: 80,
+  };
+
+  const filteredExercises = selectedCategory === 'all' 
+    ? exercises 
+    : exercises.filter(exercise => exercise.category === selectedCategory);
+
+  const handleExercisePress = (exerciseId: string) => {
+    setSelectedExercise(exerciseId);
+  };
+
+  const handleExerciseStart = (exerciseId: string) => {
+    const exercise = exercises.find(e => e.id === exerciseId);
+    if (!exercise) return;
+
+    switch (exerciseId) {
+      case '1':
+        navigation.navigate('WalkingMeasurement' as never);
+        break;
+      case '2':
+        navigation.navigate('StretchingMeasurement' as never);
+        break;
+      case '3':
+        navigation.navigate('StandingMeasurement' as never);
+        break;
+      case '4':
+        navigation.navigate('SittingMeasurement' as never);
+        break;
+      case '5':
+        navigation.navigate('BalanceMeasurement' as never);
+        break;
+      case '6':
+        navigation.navigate('WalkingSupportMeasurement' as never);
+        break;
+      default:
+        Alert.alert('준비 중', '해당 운동 측정 기능은 준비 중입니다.');
+    }
   };
 
   const handleGoBack = () => {
-    if (isExerciseStarted) {
-      Alert.alert(
-        '운동 중',
-        '운동이 진행 중입니다. 정말 나가시겠습니까?',
-        [
-          { text: '취소', style: 'cancel' },
-          { 
-            text: '나가기', 
-            onPress: () => {
-              setIsExerciseStarted(false);
-              setSelectedExercise(null);
-              setExerciseTime(0);
-              // 홈 화면으로 돌아가기 (MainNavigator에서 DashboardScreen으로)
-              navigation.goBack();
-            }
-          },
-        ]
-      );
-    } else {
-      navigation.goBack();
-    }
+    navigation.goBack();
   };
 
-  const startExercise = () => {
-    if (!selectedExercise) {
-      Alert.alert('운동 선택', '운동을 선택해주세요.');
-      return;
-    }
-    setIsExerciseStarted(true);
-    // 실제로는 타이머 시작 로직
-  };
-
-  const stopExercise = () => {
-    Alert.alert(
-      '운동 종료',
-      '운동을 종료하시겠습니까?',
-      [
-        { text: '취소', style: 'cancel' },
-        { 
-          text: '종료', 
-          onPress: () => {
-            setIsExerciseStarted(false);
-            setSelectedExercise(null);
-            setExerciseTime(0);
-          }
-        },
-      ]
-    );
+  const handleCategoryPress = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setSelectedExercise(null);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with Back Button */}
-      <View style={styles.headerContainer}>
+      {/* Header */}
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Feather name="chevron-left" size={28} color="#A3A8AF" />
         </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>실내 운동</Text>
-          <Text style={styles.subtitle}>오늘의 실내 운동을 시작해보세요</Text>
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.headerTitle}>실내 재활 운동</Text>
+          <Text style={styles.headerSubtitle}>오늘도 건강한 하루를 시작해보세요</Text>
         </View>
       </View>
 
@@ -137,126 +191,170 @@ const IndoorExerciseScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Today's Progress */}
-        <View style={styles.progressSection}>
-          <Card style={styles.progressCard}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>오늘의 진행상황</Text>
-              <Text style={styles.progressValue}>{todayStats.completed}/{todayStats.total}</Text>
-            </View>
-            <View style={styles.progressBar}>
-              <View 
-                style={[
-                  styles.progressFill, 
-                  { width: `${(todayStats.completed / todayStats.total) * 100}%` }
-                ]} 
-              />
-            </View>
-            <View style={styles.progressStats}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{todayStats.time}분</Text>
-                <Text style={styles.statLabel}>총 운동 시간</Text>
+        {/* Today's Summary Card */}
+        <View style={styles.summarySection}>
+          <Card style={styles.summaryCard}>
+            <View style={styles.summaryHeader}>
+              <View style={styles.summaryTitleContainer}>
+                <Text style={styles.summaryTitle}>오늘의 진행상황</Text>
+                <View style={styles.streakContainer}>
+                  <Text style={styles.streakIcon}>🔥</Text>
+                  <Text style={styles.streakText}>{todayStats.streak}일 연속</Text>
+                </View>
               </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>75%</Text>
-                <Text style={styles.statLabel}>완료율</Text>
+              <View style={styles.progressCircle}>
+                <Text style={styles.progressText}>{todayStats.weeklyGoal}%</Text>
+                <Text style={styles.progressLabel}>주간 목표</Text>
+              </View>
+            </View>
+            
+            <View style={styles.summaryStats}>
+              <View style={styles.summaryStat}>
+                <Text style={styles.summaryStatValue}>{todayStats.completed}/{todayStats.total}</Text>
+                <Text style={styles.summaryStatLabel}>완료</Text>
+              </View>
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryStat}>
+                <Text style={styles.summaryStatValue}>{todayStats.time}분</Text>
+                <Text style={styles.summaryStatLabel}>총 시간</Text>
+              </View>
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryStat}>
+                <Text style={styles.summaryStatValue}>33%</Text>
+                <Text style={styles.summaryStatLabel}>완료율</Text>
               </View>
             </View>
           </Card>
         </View>
 
-        {/* Exercise Selection */}
-        <View style={styles.exerciseSection}>
-          <Text style={styles.sectionTitle}>운동 선택</Text>
-          <View style={styles.exerciseGrid}>
-            {exercises.map((exercise) => (
+        {/* Category Filter */}
+        <View style={styles.categorySection}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryContainer}
+          >
+            {categories.map((category) => (
               <TouchableOpacity
-                key={exercise.id}
+                key={category.id}
                 style={[
-                  styles.exerciseCard,
-                  selectedExercise === exercise.id && styles.selectedExerciseCard
+                  styles.categoryButton,
+                  selectedCategory === category.id && styles.categoryButtonActive
                 ]}
-                onPress={() => setSelectedExercise(exercise.id)}
+                onPress={() => handleCategoryPress(category.id)}
               >
-                <View style={[styles.exerciseIcon, { backgroundColor: exercise.color + '20' }]}>
-                  <Text style={styles.exerciseIconText}>{exercise.icon}</Text>
-                </View>
-                <Text style={styles.exerciseName}>{exercise.name}</Text>
-                <Text style={styles.exerciseDescription}>{exercise.description}</Text>
-                <View style={styles.exerciseMeta}>
-                  <View style={styles.metaItem}>
-                    <Text style={styles.metaLabel}>시간</Text>
-                    <Text style={styles.metaValue}>{exercise.duration}</Text>
-                  </View>
-                  <View style={styles.metaItem}>
-                    <Text style={styles.metaLabel}>난이도</Text>
-                    <Text style={styles.metaValue}>{exercise.difficulty}</Text>
-                  </View>
-                </View>
+                <Text style={styles.categoryIcon}>{category.icon}</Text>
+                <Text style={[
+                  styles.categoryText,
+                  selectedCategory === category.id && styles.categoryTextActive
+                ]}>
+                  {category.name}
+                </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
         </View>
 
-        {/* Exercise Instructions */}
-        {selectedExercise && (
-          <View style={styles.instructionSection}>
-            <Text style={styles.sectionTitle}>운동 방법</Text>
-            <Card style={styles.instructionCard}>
-              <Text style={styles.instructionTitle}>
-                {exercises.find(e => e.id === selectedExercise)?.name} 운동 가이드
-              </Text>
-              <View style={styles.instructionSteps}>
-                <View style={styles.stepItem}>
-                  <View style={styles.stepNumber}>
-                    <Text style={styles.stepNumberText}>1</Text>
-                  </View>
-                  <Text style={styles.stepText}>편안한 자세로 서거나 앉습니다</Text>
-                </View>
-                <View style={styles.stepItem}>
-                  <View style={styles.stepNumber}>
-                    <Text style={styles.stepNumberText}>2</Text>
-                  </View>
-                  <Text style={styles.stepText}>천천히 호흡을 조절합니다</Text>
-                </View>
-                <View style={styles.stepItem}>
-                  <View style={styles.stepNumber}>
-                    <Text style={styles.stepNumberText}>3</Text>
-                  </View>
-                  <Text style={styles.stepText}>지시에 따라 운동을 수행합니다</Text>
-                </View>
-                <View style={styles.stepItem}>
-                  <View style={styles.stepNumber}>
-                    <Text style={styles.stepNumberText}>4</Text>
-                  </View>
-                  <Text style={styles.stepText}>무리하지 말고 본인의 페이스를 유지합니다</Text>
-                </View>
-              </View>
-            </Card>
+        {/* Exercise List */}
+        <View style={styles.exerciseSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              {selectedCategory === 'all' ? '모든 운동' : 
+               categories.find(c => c.id === selectedCategory)?.name + ' 운동'}
+            </Text>
+            <Text style={styles.exerciseCount}>{filteredExercises.length}개</Text>
           </View>
-        )}
+          
+          <View style={styles.exerciseList}>
+            {filteredExercises.map((exercise, index) => (
+              <View key={exercise.id}>
+                <View
+                  style={[
+                    styles.exerciseCard,
+                    selectedExercise === exercise.id && styles.selectedExerciseCard,
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={styles.exerciseContent}
+                    onPress={() => handleExercisePress(exercise.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.exerciseHeader}>
+                      <View style={[styles.exerciseIcon, { backgroundColor: exercise.color + '15' }]}>
+                        <Text style={styles.exerciseIconText}>{exercise.icon}</Text>
+                      </View>
+                      <View style={styles.exerciseInfo}>
+                        <View style={styles.exerciseTitleRow}>
+                          <Text style={styles.exerciseName}>{exercise.name}</Text>
+                          {exercise.recommended && (
+                            <View style={styles.recommendedBadge}>
+                              <Text style={styles.recommendedText}>추천</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={styles.exerciseDescription}>{exercise.description}</Text>
+                        <View style={styles.exerciseMeta}>
+                          <View style={styles.metaItem}>
+                            <Text style={styles.metaIcon}>⏱️</Text>
+                            <Text style={styles.metaText}>{exercise.duration}</Text>
+                          </View>
+                          <View style={styles.metaItem}>
+                            <Text style={styles.metaIcon}>📊</Text>
+                            <Text style={styles.metaText}>{exercise.difficulty}</Text>
+                          </View>
+                          <View style={styles.metaItem}>
+                            <Text style={styles.metaIcon}>🕐</Text>
+                            <Text style={styles.metaText}>{exercise.lastCompleted}</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </View>
 
-        {/* Action Button */}
-        <View style={styles.actionSection}>
-          {!isExerciseStarted ? (
-            <TouchableOpacity
-              style={[
-                styles.actionButton,
-                !selectedExercise && styles.disabledButton
-              ]}
-              onPress={startExercise}
-              disabled={!selectedExercise}
-            >
-              <Text style={styles.actionButtonText}>운동 시작</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.stopButton]}
-              onPress={stopExercise}
-            >
-              <Text style={styles.actionButtonText}>운동 종료</Text>
-            </TouchableOpacity>
-          )}
+                {/* 인라인 상세 정보 */}
+                {selectedExercise === exercise.id && (
+                  <View style={styles.inlineDetailCard}>
+                    <View style={styles.detailHeader}>
+                      <Text style={styles.detailTitle}>운동 효과</Text>
+                      <TouchableOpacity 
+                        style={styles.closeButton}
+                        onPress={() => setSelectedExercise(null)}
+                      >
+                        <Text style={styles.closeButtonText}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.benefitsContainer}>
+                      <View style={styles.benefitsList}>
+                        {exercise.benefits.map((benefit, benefitIndex) => (
+                          <View key={benefitIndex} style={styles.benefitItem}>
+                            <Text style={styles.benefitIcon}>✓</Text>
+                            <Text style={styles.benefitText}>{benefit}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+
+                    <View style={styles.targetContainer}>
+                      <Text style={styles.targetLabel}>측정 항목</Text>
+                      <Text style={styles.targetValue}>{exercise.target}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.startButton}
+                      onPress={() => handleExerciseStart(exercise.id)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.startButtonText}>
+                        {exercise.target} 시작하기
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -268,236 +366,352 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  headerContainer: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.paddingLarge,
-    paddingTop: Spacing.sectionSpacing,
-    paddingBottom: Spacing.componentSpacing,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
+    backgroundColor: '#F8F9FA',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.componentSpacing,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    marginRight: 8,
+    marginTop: 0,
   },
-  backButtonText: {
-    fontSize: 20,
-    color: Colors.textPrimary,
-    fontWeight: '600',
-  },
-  headerContent: {
+  headerTextContainer: {
     flex: 1,
   },
-  title: {
-    ...Typography.h1,
-    color: Colors.textPrimary,
+  headerTitle: {
+    fontSize: 22,
     fontWeight: '700',
-    marginBottom: Spacing.xs,
+    color: '#222',
+    marginBottom: 2,
   },
-  subtitle: {
-    ...Typography.body,
-    color: Colors.textLight,
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#A3A8AF',
+    fontWeight: '400',
   },
   scrollContent: {
-    paddingBottom: Spacing.sectionSpacing,
+    paddingBottom: 100,
   },
-  progressSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-    marginBottom: Spacing.sectionSpacing,
+  summarySection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
   },
-  progressCard: {
-    padding: Spacing.padding,
+  summaryCard: {
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  progressHeader: {
+  summaryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.componentSpacing,
+    marginBottom: 20,
   },
-  progressTitle: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    fontWeight: '600',
+  summaryTitleContainer: {
+    flex: 1,
   },
-  progressValue: {
-    ...Typography.h3,
-    color: Colors.primary,
+  summaryTitle: {
+    fontSize: 18,
     fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 8,
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: Colors.borderLight,
-    borderRadius: 4,
-    marginBottom: Spacing.componentSpacing,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.primary,
-    borderRadius: 4,
-  },
-  progressStats: {
+  streakContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
     alignItems: 'center',
   },
-  statValue: {
-    ...Typography.h3,
-    color: Colors.textPrimary,
-    fontWeight: '700',
-    marginBottom: Spacing.xs,
+  streakIcon: {
+    fontSize: 16,
+    marginRight: 6,
   },
-  statLabel: {
-    ...Typography.caption,
-    color: Colors.textLight,
-  },
-  exerciseSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-    marginBottom: Spacing.sectionSpacing,
-  },
-  sectionTitle: {
-    ...Typography.h2,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.componentSpacing,
+  streakText: {
+    fontSize: 14,
+    color: '#F59E0B',
     fontWeight: '600',
   },
-  exerciseGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  progressCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  exerciseCard: {
-    width: '48%',
-    backgroundColor: Colors.background,
-    borderRadius: Spacing.cardRadius,
-    padding: Spacing.padding,
-    marginBottom: Spacing.componentSpacing,
-    shadowColor: Colors.shadow,
+  progressText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  progressLabel: {
+    fontSize: 10,
+    color: '#6B7280',
+  },
+  summaryStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  summaryStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryStatValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  summaryStatLabel: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  summaryDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: 16,
+  },
+  categorySection: {
+    marginBottom: 24,
+  },
+  categoryContainer: {
+    paddingHorizontal: 20,
+  },
+  categoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginRight: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+  },
+  categoryButtonActive: {
+    backgroundColor: '#1F2937',
+  },
+  categoryIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  categoryTextActive: {
+    color: '#FFFFFF',
+  },
+  exerciseSection: {
+    paddingHorizontal: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  exerciseCount: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  exerciseList: {
+    gap: 12,
+  },
+  exerciseCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   selectedExerciseCard: {
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: '#3182F6',
+    borderBottomWidth: 0,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  exerciseContent: {
+    padding: 16,
+  },
+  exerciseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   exerciseIcon: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginRight: 16,
   },
   exerciseIconText: {
     fontSize: 24,
   },
+  exerciseInfo: {
+    flex: 1,
+  },
+  exerciseTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   exerciseName: {
-    ...Typography.body,
-    color: Colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginRight: 8,
+  },
+  recommendedBadge: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  recommendedText: {
+    fontSize: 10,
+    color: '#FFFFFF',
     fontWeight: '600',
-    marginBottom: Spacing.xs,
   },
   exerciseDescription: {
-    ...Typography.caption,
-    color: Colors.textLight,
-    marginBottom: Spacing.sm,
-    lineHeight: 16,
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+    marginBottom: 12,
   },
   exerciseMeta: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 16,
   },
   metaItem: {
-    alignItems: 'center',
-  },
-  metaLabel: {
-    ...Typography.caption,
-    color: Colors.textLight,
-    marginBottom: Spacing.xs,
-  },
-  metaValue: {
-    ...Typography.bodySmall,
-    color: Colors.textPrimary,
-    fontWeight: '500',
-  },
-  instructionSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-    marginBottom: Spacing.sectionSpacing,
-  },
-  instructionCard: {
-    padding: Spacing.padding,
-  },
-  instructionTitle: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    fontWeight: '600',
-    marginBottom: Spacing.componentSpacing,
-  },
-  instructionSteps: {
-    gap: Spacing.componentSpacing,
-  },
-  stepItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  stepNumber: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.sm,
-    marginTop: 2,
   },
-  stepNumberText: {
-    ...Typography.caption,
-    color: Colors.background,
-    fontWeight: '600',
+  metaIcon: {
+    fontSize: 12,
+    marginRight: 4,
   },
-  stepText: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    flex: 1,
-    lineHeight: 20,
+  metaText: {
+    fontSize: 12,
+    color: '#6B7280',
   },
-  actionSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-  },
-  actionButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: Spacing.cardRadius,
-    paddingVertical: Spacing.paddingLarge,
-    alignItems: 'center',
-    shadowColor: Colors.shadow,
+  inlineDetailCard: {
+    marginTop: -12,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 2,
+    borderTopWidth: 0,
+    borderLeftWidth: 2,
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: '#3182F6',
   },
-  disabledButton: {
-    backgroundColor: Colors.borderLight,
+  detailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  stopButton: {
-    backgroundColor: '#F44336',
-  },
-  actionButtonText: {
-    ...Typography.body,
-    color: Colors.background,
+  detailTitle: {
+    fontSize: 16,
     fontWeight: '600',
+    color: '#1F2937',
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 18,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+  benefitsContainer: {
+    marginBottom: 16,
+  },
+  benefitsList: {
+    gap: 8,
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  benefitIcon: {
+    fontSize: 14,
+    color: '#10B981',
+    fontWeight: '700',
+    marginRight: 8,
+  },
+  benefitText: {
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 20,
+  },
+  targetContainer: {
+    backgroundColor: '#F3F4F6',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  targetLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  targetValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  startButton: {
+    backgroundColor: '#3182F6',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    shadowColor: '#3182F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  startButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
 

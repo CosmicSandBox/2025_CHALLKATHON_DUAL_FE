@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,7 +16,10 @@ import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { RootStackParamList } from '../../navigation/types';
 
-type DashboardScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
+type DashboardScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Main'
+>;
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
@@ -64,48 +68,58 @@ const DashboardScreen: React.FC = () => {
     },
   ];
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 5) return '좋은 새벽이에요';
+    if (hour < 12) return '좋은 아침이에요';
+    if (hour < 18) return '편안한 오후예요';
+    return '따뜻한 저녁이에요';
+  };
+
   const handleIndoorExercise = () => {
-    // 실내 운동 화면으로 네비게이션
     navigation.navigate('IndoorExercise' as never);
   };
 
   const handleOutdoorExercise = () => {
-    // 실외 운동 화면으로 네비게이션
     navigation.navigate('OutdoorExercise' as never);
   };
 
   const handlePainRecord = () => {
-    // 통증 기록 화면으로 네비게이션 (임시로 알림)
     console.log('통증 기록 화면으로 이동');
   };
 
   const handleExerciseHistory = () => {
-    // 운동 기록 화면으로 네비게이션 (임시로 알림)
     console.log('운동 기록 화면으로 이동');
   };
 
   const handleSettings = () => {
-    // 설정 화면으로 네비게이션
     navigation.navigate('Settings' as never);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>안녕하세요 👋</Text>
+            <Text style={styles.greeting}>{getGreeting()}</Text>
             <Text style={styles.name}>홍길동님</Text>
+            <View style={styles.subtitleContainer}>
+              <View style={styles.statusDot} />
+              <Text style={styles.subtitle}>오늘도 건강한 하루를 시작해보세요</Text>
+            </View>
           </View>
           <TouchableOpacity style={styles.settingsButton} onPress={handleSettings}>
-            <View style={styles.settingsIconContainer}>
-              <Text style={styles.settingsIcon}>⚙️</Text>
+            <View style={styles.settingsIcon}>
+              <View style={styles.dotsContainer}>
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+              </View>
             </View>
-            <Text style={styles.settingsText}>설정</Text>
           </TouchableOpacity>
         </View>
 
@@ -115,7 +129,9 @@ const DashboardScreen: React.FC = () => {
           <Card style={styles.summaryCard}>
             <View style={styles.summaryGrid}>
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryValue}>{todayStats.steps.toLocaleString()}</Text>
+                <Text style={styles.summaryValue}>
+                  {todayStats.steps.toLocaleString()}
+                </Text>
                 <Text style={styles.summaryLabel}>걸음</Text>
               </View>
               <View style={styles.summaryDivider} />
@@ -132,11 +148,15 @@ const DashboardScreen: React.FC = () => {
             <View style={styles.summaryFooter}>
               <View style={styles.summaryFooterItem}>
                 <Text style={styles.summaryFooterLabel}>소모 칼로리</Text>
-                <Text style={styles.summaryFooterValue}>{todayStats.calories}kcal</Text>
+                <Text style={styles.summaryFooterValue}>
+                  {todayStats.calories}kcal
+                </Text>
               </View>
               <View style={styles.summaryFooterItem}>
                 <Text style={styles.summaryFooterLabel}>이동 거리</Text>
-                <Text style={styles.summaryFooterValue}>{todayStats.distance}km</Text>
+                <Text style={styles.summaryFooterValue}>
+                  {todayStats.distance}km
+                </Text>
               </View>
             </View>
           </Card>
@@ -147,7 +167,10 @@ const DashboardScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>빠른 시작</Text>
           <View style={styles.actionsContainer}>
             {/* 실내 운동 */}
-            <TouchableOpacity style={styles.indoorAction} onPress={handleIndoorExercise}>
+            <TouchableOpacity
+              style={styles.indoorAction}
+              onPress={handleIndoorExercise}
+            >
               <View style={styles.actionContent}>
                 <View style={styles.actionHeader}>
                   <Text style={styles.actionTitle}>실내 운동</Text>
@@ -160,7 +183,10 @@ const DashboardScreen: React.FC = () => {
             </TouchableOpacity>
 
             {/* 실외 운동 */}
-            <TouchableOpacity style={styles.outdoorAction} onPress={handleOutdoorExercise}>
+            <TouchableOpacity
+              style={styles.outdoorAction}
+              onPress={handleOutdoorExercise}
+            >
               <View style={styles.actionContent}>
                 <View style={styles.actionHeader}>
                   <Text style={styles.actionTitle}>실외 운동</Text>
@@ -177,12 +203,20 @@ const DashboardScreen: React.FC = () => {
         {/* Additional Actions */}
         <View style={styles.additionalActionsSection}>
           <View style={styles.additionalActionsGrid}>
-            <TouchableOpacity style={styles.additionalAction} onPress={handlePainRecord}>
+            <TouchableOpacity
+              style={styles.additionalAction}
+              onPress={handlePainRecord}
+            >
               <Text style={styles.additionalActionTitle}>통증 기록</Text>
-              <Text style={styles.additionalActionSubtitle}>오늘의 통증 상태</Text>
+              <Text style={styles.additionalActionSubtitle}>
+                오늘의 통증 상태
+              </Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.additionalAction} onPress={handleExerciseHistory}>
+
+            <TouchableOpacity
+              style={styles.additionalAction}
+              onPress={handleExerciseHistory}
+            >
               <Text style={styles.additionalActionTitle}>운동 기록</Text>
               <Text style={styles.additionalActionSubtitle}>전체 기록 보기</Text>
             </TouchableOpacity>
@@ -196,25 +230,31 @@ const DashboardScreen: React.FC = () => {
             <View style={styles.progressHeader}>
               <Text style={styles.progressTitle}>주간 걸음 수</Text>
               <Text style={styles.progressTotal}>
-                {weeklyData.reduce((sum, day) => sum + day.steps, 0).toLocaleString()} 걸음
+                {weeklyData
+                  .reduce((sum, day) => sum + day.steps, 0)
+                  .toLocaleString()}{' '}
+                걸음
               </Text>
             </View>
             <View style={styles.progressBars}>
               {weeklyData.map((day, index) => (
                 <View key={index} style={styles.progressBarContainer}>
                   <View style={styles.progressBar}>
-                    <View 
+                    <View
                       style={[
-                        styles.progressBarFill, 
-                        { 
+                        styles.progressBarFill,
+                        {
                           height: `${(day.steps / 4000) * 100}%`,
-                          backgroundColor: day.steps >= 3000 ? Colors.primary : Colors.accent
-                        }
-                      ]} 
+                          backgroundColor:
+                            day.steps >= 3000 ? Colors.primary : Colors.accent,
+                        },
+                      ]}
                     />
                   </View>
                   <Text style={styles.progressDay}>{day.day}</Text>
-                  <Text style={styles.progressSteps}>{day.steps.toLocaleString()}</Text>
+                  <Text style={styles.progressSteps}>
+                    {day.steps.toLocaleString()}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -226,19 +266,28 @@ const DashboardScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>최근 활동</Text>
           <Card style={styles.activityCard}>
             {recentActivities.map((activity, index) => (
-              <View key={activity.id} style={[
-                styles.activityItem,
-                index === recentActivities.length - 1 && styles.activityItemLast
-              ]}>
-                <View style={[
-                  styles.activityIcon,
-                  activity.type === 'indoor' && styles.activityIconIndoor,
-                  activity.type === 'outdoor' && styles.activityIconOutdoor,
-                  activity.type === 'pain' && styles.activityIconPain,
-                ]}>
+              <View
+                key={activity.id}
+                style={[
+                  styles.activityItem,
+                  index === recentActivities.length - 1 &&
+                    styles.activityItemLast,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.activityIcon,
+                    activity.type === 'indoor' && styles.activityIconIndoor,
+                    activity.type === 'outdoor' && styles.activityIconOutdoor,
+                    activity.type === 'pain' && styles.activityIconPain,
+                  ]}
+                >
                   <Text style={styles.activityIconText}>
-                    {activity.type === 'indoor' ? '🏠' : 
-                     activity.type === 'outdoor' ? '🌳' : '📊'}
+                    {activity.type === 'indoor'
+                      ? '🏠'
+                      : activity.type === 'outdoor'
+                      ? '🌳'
+                      : '📊'}
                   </Text>
                 </View>
                 <View style={styles.activityContent}>
@@ -248,7 +297,9 @@ const DashboardScreen: React.FC = () => {
                 <View style={styles.activityValueContainer}>
                   <Text style={styles.activityValue}>{activity.value}</Text>
                   {activity.duration && (
-                    <Text style={styles.activityDuration}>{activity.duration}</Text>
+                    <Text style={styles.activityDuration}>
+                      {activity.duration}
+                    </Text>
                   )}
                 </View>
               </View>
@@ -266,7 +317,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   scrollContent: {
-    paddingBottom: Spacing.sectionSpacing,
+    paddingBottom: Spacing.sectionSpacing * 2,
   },
   header: {
     flexDirection: 'row',
@@ -274,47 +325,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.paddingLarge,
     paddingTop: Spacing.sectionSpacing,
-    paddingBottom: Spacing.componentSpacing,
+    paddingBottom: Spacing.sectionSpacing,
+    backgroundColor: Colors.background,
   },
   greeting: {
-    ...Typography.body,
-    color: Colors.textLight,
-    marginBottom: Spacing.xs,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#6B7280',
+    marginBottom: 4,
   },
   name: {
-    ...Typography.h1,
-    color: Colors.textPrimary,
+    fontSize: 28,
     fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 8,
   },
-  settingsButton: {
+  subtitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+    marginRight: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#4B5563',
+  },
+  settingsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: Colors.background,
-    paddingHorizontal: Spacing.padding,
-    paddingVertical: Spacing.sm,
-    borderRadius: Spacing.cardRadius,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  settingsIconContainer: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: Colors.secondary,
+  settingsIcon: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.xs,
   },
-  settingsIcon: {
-    fontSize: 12,
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: 16,
   },
-  settingsText: {
-    ...Typography.bodySmall,
-    color: Colors.textPrimary,
-    fontWeight: '500',
+  dot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: Colors.textLight,
   },
   summarySection: {
     paddingHorizontal: Spacing.paddingLarge,

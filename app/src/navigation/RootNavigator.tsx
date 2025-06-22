@@ -11,6 +11,7 @@ import MainNavigator from './MainNavigator';
 import IndoorExerciseScreen from '../screens/patient/IndoorExerciseScreen';
 import OutdoorExerciseScreen from '../screens/patient/OutdoorExerciseScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import WalkingMeasurementScreen from '../screens/patient/WalkingMeasurementScreen';
 
 import { RootStackParamList } from './types';
 
@@ -38,6 +39,7 @@ const RootNavigator: React.FC = () => {
             <Stack.Screen name="IndoorExercise" component={IndoorExerciseScreen} />
             <Stack.Screen name="OutdoorExercise" component={OutdoorExerciseScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="WalkingMeasurement" component={WalkingMeasurementScreen} />
           </>
         )}
       </Stack.Navigator>
