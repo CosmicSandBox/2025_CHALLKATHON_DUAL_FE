@@ -14,10 +14,10 @@ import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
-import { RootStackParamList } from '../../navigation/types';
+import { IndoorStackParamList } from '../../navigation/types';
 import { Feather } from '@expo/vector-icons';
 
-type WalkingMeasurementScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
+type WalkingMeasurementScreenNavigationProp = NativeStackNavigationProp<IndoorStackParamList, 'WalkingMeasurement'>;
 
 const WalkingMeasurementScreen: React.FC = () => {
   const navigation = useNavigation<WalkingMeasurementScreenNavigationProp>();

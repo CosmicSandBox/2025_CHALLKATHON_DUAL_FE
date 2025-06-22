@@ -15,12 +15,12 @@ import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
-import { RootStackParamList } from '../../navigation/types';
+import { IndoorStackParamList } from '../../navigation/types';
 import { Feather } from '@expo/vector-icons';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-type IndoorExerciseScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
+type IndoorExerciseScreenNavigationProp = NativeStackNavigationProp<IndoorStackParamList, 'IndoorToday'>;
 
 const IndoorExerciseScreen: React.FC = () => {
   const navigation = useNavigation<IndoorExerciseScreenNavigationProp>();

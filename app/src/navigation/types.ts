@@ -33,9 +33,8 @@ export type OnboardingStackParamList = {
 
 export type MainTabParamList = {
   Dashboard: undefined;
-  Indoor: NavigatorScreenParams<IndoorStackParamList>;
-  Outdoor: NavigatorScreenParams<OutdoorStackParamList>;
-  Caregiver: NavigatorScreenParams<CaregiverStackParamList>;
+  Indoor: undefined;
+  Outdoor: undefined;
   Settings: undefined;
 };
 
@@ -43,6 +42,7 @@ export type IndoorStackParamList = {
   IndoorToday: undefined;
   IndoorHistoryList: undefined;
   IndoorHistoryDetail: { date: string };
+  WalkingMeasurement: undefined;
 };
 
 export type OutdoorStackParamList = {

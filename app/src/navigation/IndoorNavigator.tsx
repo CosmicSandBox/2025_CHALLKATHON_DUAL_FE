@@ -1,5 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import IndoorExerciseScreen from '../screens/patient/IndoorExerciseScreen';
+import WalkingMeasurementScreen from '../screens/patient/WalkingMeasurementScreen';
 import { IndoorStackParamList } from './types';
 import { Colors } from '../constants/colors';
 import { Typography } from '../constants/typography';
@@ -42,9 +44,16 @@ const IndoorNavigator: React.FC = () => {
     >
       <Stack.Screen 
         name="IndoorToday" 
-        component={IndoorTodayScreen}
+        component={IndoorExerciseScreen}
         options={{
-          title: '실내 오늘',
+          title: '실내 운동',
+        }}
+      />
+      <Stack.Screen 
+        name="WalkingMeasurement" 
+        component={WalkingMeasurementScreen}
+        options={{
+          title: '걷기 측정',
         }}
       />
       <Stack.Screen 

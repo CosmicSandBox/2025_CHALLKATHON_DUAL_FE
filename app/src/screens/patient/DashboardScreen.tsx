@@ -9,17 +9,14 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
-import { RootStackParamList } from '../../navigation/types';
+import { MainTabParamList } from '../../navigation/types';
 
-type DashboardScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'Main'
->;
+type DashboardScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Dashboard'>;
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
@@ -77,11 +74,11 @@ const DashboardScreen: React.FC = () => {
   };
 
   const handleIndoorExercise = () => {
-    navigation.navigate('IndoorExercise' as never);
+    navigation.navigate('Indoor');
   };
 
   const handleOutdoorExercise = () => {
-    navigation.navigate('OutdoorExercise' as never);
+    navigation.navigate('Outdoor');
   };
 
   const handlePainRecord = () => {
@@ -93,7 +90,7 @@ const DashboardScreen: React.FC = () => {
   };
 
   const handleSettings = () => {
-    navigation.navigate('Settings' as never);
+    navigation.navigate('Settings');
   };
 
   return (

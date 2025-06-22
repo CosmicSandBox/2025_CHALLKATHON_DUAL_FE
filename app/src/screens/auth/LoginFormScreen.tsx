@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Keyboard,
+  Animated,
+  TextInput,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -19,6 +22,7 @@ import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
+import { Feather } from '@expo/vector-icons';
 
 type LoginFormScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'LoginForm'>;
 
@@ -31,6 +35,10 @@ const LoginFormScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const passwordInputRef = useRef<TextInput>(null);
+  const buttonScaleAnim = useRef(new Animated.Value(1)).current;
+  const successAnim = useRef(new Animated.Value(0)).current;
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -54,27 +62,66 @@ const LoginFormScreen: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const animateButtonPress = () => {
+    Animated.sequence([
+      Animated.timing(buttonScaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonScaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const animateSuccess = () => {
+    Animated.timing(successAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
   const handleLogin = async () => {
     if (!validateForm()) return;
 
+    animateButtonPress();
     setIsLoading(true);
+    Keyboard.dismiss();
 
     try {
       // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Mock successful login
       const mockToken = 'mock-jwt-token';
       
-      dispatch(signIn({ 
-        token: mockToken, 
-        role: userRole || 'patient' 
-      }));
+      animateSuccess();
+      
+      // 성공 애니메이션 후 로그인 처리
+      setTimeout(() => {
+        dispatch(signIn({ 
+          token: mockToken, 
+          role: userRole || 'patient' 
+        }));
+      }, 300);
+      
     } catch (error) {
       Alert.alert('오류', '로그인에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEmailSubmit = () => {
+    passwordInputRef.current?.focus();
+  };
+
+  const handlePasswordSubmit = () => {
+    handleLogin();
   };
 
   const handleForgotPassword = () => {
@@ -107,6 +154,9 @@ const LoginFormScreen: React.FC = () => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              returnKeyType="next"
+              onSubmitEditing={handleEmailSubmit}
+              blurOnSubmit={false}
             />
 
             <Input
@@ -117,6 +167,9 @@ const LoginFormScreen: React.FC = () => {
               error={errors.password}
               secureTextEntry
               autoCapitalize="none"
+              returnKeyType="done"
+              onSubmitEditing={handlePasswordSubmit}
+              blurOnSubmit={true}
             />
 
             <TouchableOpacity 
@@ -126,13 +179,40 @@ const LoginFormScreen: React.FC = () => {
               <Text style={styles.forgotPasswordText}>비밀번호를 잊으셨나요?</Text>
             </TouchableOpacity>
 
-            <Button
-              title="로그인"
-              onPress={handleLogin}
-              loading={isLoading}
-              fullWidth
-              style={styles.loginButton}
-            />
+            <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
+              <Button
+                title={isLoading ? "로그인 중..." : "로그인"}
+                onPress={handleLogin}
+                loading={isLoading}
+                fullWidth
+                style={styles.loginButton}
+                disabled={isLoading}
+              />
+            </Animated.View>
+
+            {/* Success Animation */}
+            <Animated.View 
+              style={[
+                styles.successOverlay,
+                {
+                  opacity: successAnim,
+                  transform: [
+                    {
+                      scale: successAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.8, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+              pointerEvents="none"
+            >
+              <View style={styles.successContainer}>
+                <Feather name="check-circle" size={48} color={Colors.success} />
+                <Text style={styles.successText}>로그인 성공!</Text>
+              </View>
+            </Animated.View>
           </View>
 
           {/* Signup Link */}
@@ -204,6 +284,27 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: Colors.primary,
     textDecorationLine: 'underline',
+  },
+  successOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 16,
+  },
+  successContainer: {
+    alignItems: 'center',
+    padding: Spacing.paddingLarge,
+  },
+  successText: {
+    ...Typography.h3,
+    color: Colors.success,
+    marginTop: Spacing.sm,
+    fontWeight: '600',
   },
 });
 
