@@ -101,6 +101,7 @@ const DashboardScreen: React.FC = () => {
       >
         {/* Header */}
         <View style={styles.header}>
+          <View style={styles.headerBackground} />
           <View>
             <Text style={styles.greeting}>{getGreeting()}</Text>
             <Text style={styles.name}>홍길동님</Text>
@@ -318,12 +319,18 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.paddingLarge,
     paddingTop: Spacing.sectionSpacing,
     paddingBottom: Spacing.sectionSpacing,
-    backgroundColor: Colors.background,
+    backgroundColor: '#F8F9FA',
+    position: 'relative',
+  },
+  headerBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#F8F9FA',
+    zIndex: -1,
   },
   greeting: {
     fontSize: 16,

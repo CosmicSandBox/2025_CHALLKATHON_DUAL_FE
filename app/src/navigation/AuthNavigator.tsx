@@ -14,43 +14,24 @@ const AuthNavigator: React.FC = () => {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: {
-          backgroundColor: Colors.background,
-        },
-        headerTintColor: Colors.textPrimary,
-        headerTitleStyle: {
-          ...Typography.h2,
-        },
-        headerShadowVisible: false,
+        headerShown: false,
       }}
     >
       <Stack.Screen 
         name="Login" 
         component={LoginScreen}
-        options={{
-          title: '역할 선택',
-        }}
       />
       <Stack.Screen 
         name="LoginForm" 
         component={LoginFormScreen}
-        options={{
-          title: '로그인',
-        }}
       />
       <Stack.Screen 
         name="Signup" 
         component={SignupScreen}
-        options={{
-          title: '회원가입',
-        }}
       />
       <Stack.Screen 
         name="ResetPassword" 
         component={ResetPasswordScreen}
-        options={{
-          title: '비밀번호 재설정',
-        }}
       />
     </Stack.Navigator>
   );

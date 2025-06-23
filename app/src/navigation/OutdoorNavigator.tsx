@@ -30,36 +30,20 @@ const OutdoorNavigator: React.FC = () => {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: {
-          backgroundColor: Colors.background,
-        },
-        headerTintColor: Colors.textPrimary,
-        headerTitleStyle: {
-          ...Typography.h2,
-        },
-        headerShadowVisible: false,
+        headerShown: false,
       }}
     >
       <Stack.Screen 
         name="OutdoorToday" 
         component={OutdoorTodayScreen}
-        options={{
-          title: '실외 오늘',
-        }}
       />
       <Stack.Screen 
         name="OutdoorHistoryList" 
         component={OutdoorHistoryListScreen}
-        options={{
-          title: '실외 기록',
-        }}
       />
       <Stack.Screen 
         name="OutdoorHistoryDetail" 
         component={OutdoorHistoryDetailScreen}
-        options={{
-          title: '기록 상세',
-        }}
       />
     </Stack.Navigator>
   );

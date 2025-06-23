@@ -2,6 +2,11 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import IndoorExerciseScreen from '../screens/patient/IndoorExerciseScreen';
 import WalkingMeasurementScreen from '../screens/patient/WalkingMeasurementScreen';
+import StretchingMeasurementScreen from '../screens/patient/StretchingMeasurementScreen';
+import StandingMeasurementScreen from '../screens/patient/StandingMeasurementScreen';
+import SittingMeasurementScreen from '../screens/patient/SittingMeasurementScreen';
+import BalanceMeasurementScreen from '../screens/patient/BalanceMeasurementScreen';
+import WalkingSupportMeasurementScreen from '../screens/patient/WalkingSupportMeasurementScreen';
 import { IndoorStackParamList } from './types';
 import { Colors } from '../constants/colors';
 import { Typography } from '../constants/typography';
@@ -32,29 +37,16 @@ const IndoorNavigator: React.FC = () => {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: {
-          backgroundColor: Colors.background,
-        },
-        headerTintColor: Colors.textPrimary,
-        headerTitleStyle: {
-          ...Typography.h2,
-        },
-        headerShadowVisible: false,
+        headerShown: false,
       }}
     >
       <Stack.Screen 
         name="IndoorToday" 
         component={IndoorExerciseScreen}
-        options={{
-          title: '실내 운동',
-        }}
       />
       <Stack.Screen 
         name="WalkingMeasurement" 
         component={WalkingMeasurementScreen}
-        options={{
-          title: '걷기 측정',
-        }}
       />
       <Stack.Screen 
         name="IndoorHistoryList" 
@@ -69,6 +61,26 @@ const IndoorNavigator: React.FC = () => {
         options={{
           title: '기록 상세',
         }}
+      />
+      <Stack.Screen 
+        name="StretchingMeasurement" 
+        component={StretchingMeasurementScreen}
+      />
+      <Stack.Screen 
+        name="StandingMeasurement" 
+        component={StandingMeasurementScreen}
+      />
+      <Stack.Screen 
+        name="SittingMeasurement" 
+        component={SittingMeasurementScreen}
+      />
+      <Stack.Screen 
+        name="BalanceMeasurement" 
+        component={BalanceMeasurementScreen}
+      />
+      <Stack.Screen 
+        name="WalkingSupportMeasurement" 
+        component={WalkingSupportMeasurementScreen}
       />
     </Stack.Navigator>
   );

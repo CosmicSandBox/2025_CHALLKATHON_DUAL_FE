@@ -43,6 +43,11 @@ export type IndoorStackParamList = {
   IndoorHistoryList: undefined;
   IndoorHistoryDetail: { date: string };
   WalkingMeasurement: undefined;
+  StretchingMeasurement: undefined;
+  StandingMeasurement: undefined;
+  SittingMeasurement: undefined;
+  BalanceMeasurement: undefined;
+  WalkingSupportMeasurement: undefined;
 };
 
 export type OutdoorStackParamList = {
