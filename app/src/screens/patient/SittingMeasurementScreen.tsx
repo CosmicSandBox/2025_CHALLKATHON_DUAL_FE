@@ -105,7 +105,10 @@ const SittingMeasurementScreen: React.FC = () => {
                 text: '확인',
                 onPress: () => {
                   setStarted(false);
-                  navigation.goBack();
+                  navigation.navigate('HealthCheck', {
+                    exerciseName: '앉아서 다리 운동',
+                    exerciseType: 'sitting'
+                  });
                 },
               },
             ]

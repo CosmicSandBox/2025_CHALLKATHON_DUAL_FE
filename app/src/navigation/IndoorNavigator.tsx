@@ -7,6 +7,7 @@ import StandingMeasurementScreen from '../screens/patient/StandingMeasurementScr
 import SittingMeasurementScreen from '../screens/patient/SittingMeasurementScreen';
 import BalanceMeasurementScreen from '../screens/patient/BalanceMeasurementScreen';
 import WalkingSupportMeasurementScreen from '../screens/patient/WalkingSupportMeasurementScreen';
+import HealthCheckScreen from '../screens/patient/HealthCheckScreen';
 import { IndoorStackParamList } from './types';
 import { Colors } from '../constants/colors';
 import { Typography } from '../constants/typography';
@@ -81,6 +82,10 @@ const IndoorNavigator: React.FC = () => {
       <Stack.Screen 
         name="WalkingSupportMeasurement" 
         component={WalkingSupportMeasurementScreen}
+      />
+      <Stack.Screen 
+        name="HealthCheck" 
+        component={HealthCheckScreen}
       />
     </Stack.Navigator>
   );

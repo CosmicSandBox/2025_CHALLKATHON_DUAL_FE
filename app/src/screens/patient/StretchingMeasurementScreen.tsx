@@ -109,7 +109,10 @@ const StretchingMeasurementScreen: React.FC = () => {
               text: '확인',
               onPress: () => {
                 setStarted(false);
-                navigation.goBack();
+                navigation.navigate('HealthCheck', {
+                  exerciseName: '다리 스트레칭',
+                  exerciseType: 'stretching'
+                });
               },
             },
           ]

@@ -97,7 +97,10 @@ const BalanceMeasurementScreen: React.FC = () => {
               text: '확인',
               onPress: () => {
                 setStarted(false);
-                navigation.goBack();
+                navigation.navigate('HealthCheck', {
+                  exerciseName: '균형 운동',
+                  exerciseType: 'balance'
+                });
               },
             },
           ]

@@ -88,7 +88,10 @@ const WalkingSupportMeasurementScreen: React.FC = () => {
                 text: '확인',
                 onPress: () => {
                   setStarted(false);
-                  navigation.goBack();
+                  navigation.navigate('HealthCheck', {
+                    exerciseName: '걷기 보조 운동',
+                    exerciseType: 'walking_support'
+                  });
                 },
               },
             ]

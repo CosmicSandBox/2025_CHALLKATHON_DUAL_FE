@@ -147,6 +147,11 @@ const WalkingMeasurementScreen: React.FC = () => {
             stopTimer();
             unsubscribePedometer();
             stopPulseAnimation();
+            // 건강 상태 체크로 이동
+            navigation.navigate('HealthCheck', {
+              exerciseName: '가벼운 걷기',
+              exerciseType: 'walking'
+            });
           }
         },
       ]

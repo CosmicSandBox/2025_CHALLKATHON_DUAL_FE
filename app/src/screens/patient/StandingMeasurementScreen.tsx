@@ -81,7 +81,10 @@ const StandingMeasurementScreen: React.FC = () => {
                 text: '확인',
                 onPress: () => {
                   setStarted(false);
-                  navigation.goBack();
+                  navigation.navigate('HealthCheck', {
+                    exerciseName: '서서하기 운동',
+                    exerciseType: 'standing'
+                  });
                 },
               },
             ]
