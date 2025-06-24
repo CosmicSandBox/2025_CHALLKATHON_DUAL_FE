@@ -16,6 +16,7 @@ import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { IndoorStackParamList } from '../../navigation/types';
 import { Feather } from '@expo/vector-icons';
+import { Pedometer } from 'expo-sensors';
 
 type WalkingMeasurementScreenNavigationProp = NativeStackNavigationProp<IndoorStackParamList, 'WalkingMeasurement'>;
 
@@ -27,24 +28,12 @@ const WalkingMeasurementScreen: React.FC = () => {
   const [distance, setDistance] = useState(0);
   const [calories, setCalories] = useState(0);
   const [pace, setPace] = useState(0);
+  const [isPedometerAvailable, setIsPedometerAvailable] = useState<boolean | null>(null);
+  const [pedometerError, setPedometerError] = useState<string | null>(null);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const stepIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // 걸음 수 시뮬레이션 (실제로는 센서 데이터 사용)
-  const simulateSteps = () => {
-    if (isWalking) {
-      setSteps(prev => {
-        const newSteps = prev + 1;
-        // 평균 보폭 60cm로 거리 계산
-        setDistance(Math.round(newSteps * 0.6 * 100) / 100);
-        // 평균 체중 60kg 기준 칼로리 계산 (걸음당 약 0.04kcal)
-        setCalories(Math.round(newSteps * 0.04 * 100) / 100);
-        return newSteps;
-      });
-    }
-  };
+  const pedometerSubscription = useRef<any>(null);
 
   // 펄스 애니메이션
   const startPulseAnimation = () => {
@@ -91,23 +80,57 @@ const WalkingMeasurementScreen: React.FC = () => {
     }
   };
 
-  // 걸음 수 시뮬레이션 시작
-  const startStepSimulation = () => {
-    stepIntervalRef.current = setInterval(simulateSteps, 2000); // 2초마다 1걸음
+  // 센서 지원 여부 확인
+  useEffect(() => {
+    // 센서 지원 여부 확인
+    Pedometer.isAvailableAsync()
+      .then(result => setIsPedometerAvailable(result))
+      .catch(() => setIsPedometerAvailable(false));
+
+    // 신체 활동 권한 요청 (expo-sensors에서 지원)
+    const requestPedometerPermission = async () => {
+      if (Pedometer.requestPermissionsAsync) {
+        const { status } = await Pedometer.requestPermissionsAsync();
+        if (status !== 'granted') {
+          setPedometerError('신체 활동 권한이 필요합니다. 설정에서 권한을 허용해 주세요.');
+        }
+      }
+    };
+    requestPedometerPermission();
+  }, []);
+
+  // 실제 걸음 수 측정 함수
+  const subscribePedometer = () => {
+    setPedometerError(null);
+    try {
+      pedometerSubscription.current = Pedometer.watchStepCount(result => {
+        setSteps(result.steps);
+        // 평균 보폭 60cm로 거리 계산
+        setDistance(Math.round(result.steps * 0.6 * 100) / 100);
+        // 평균 체중 60kg 기준 칼로리 계산 (걸음당 약 0.04kcal)
+        setCalories(Math.round(result.steps * 0.04 * 100) / 100);
+      });
+    } catch (e) {
+      setPedometerError('걸음 수 센서 구독 중 오류가 발생했습니다.');
+    }
   };
 
-  // 걸음 수 시뮬레이션 정지
-  const stopStepSimulation = () => {
-    if (stepIntervalRef.current) {
-      clearInterval(stepIntervalRef.current);
-      stepIntervalRef.current = null;
+  const unsubscribePedometer = () => {
+    if (pedometerSubscription.current) {
+      pedometerSubscription.current.remove();
+      pedometerSubscription.current = null;
     }
   };
 
   const startWalking = () => {
     setIsWalking(true);
+    setSteps(0);
+    setDistance(0);
+    setCalories(0);
+    setElapsedTime(0);
+    setPace(0);
     startTimer();
-    startStepSimulation();
+    subscribePedometer();
     startPulseAnimation();
   };
 
@@ -122,7 +145,7 @@ const WalkingMeasurementScreen: React.FC = () => {
           onPress: () => {
             setIsWalking(false);
             stopTimer();
-            stopStepSimulation();
+            unsubscribePedometer();
             stopPulseAnimation();
           }
         },
@@ -142,7 +165,7 @@ const WalkingMeasurementScreen: React.FC = () => {
             onPress: () => {
               setIsWalking(false);
               stopTimer();
-              stopStepSimulation();
+              unsubscribePedometer();
               stopPulseAnimation();
               navigation.goBack();
             }
@@ -158,7 +181,7 @@ const WalkingMeasurementScreen: React.FC = () => {
   useEffect(() => {
     return () => {
       stopTimer();
-      stopStepSimulation();
+      unsubscribePedometer();
       stopPulseAnimation();
     };
   }, []);
@@ -171,6 +194,18 @@ const WalkingMeasurementScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* 센서 지원/에러 안내 */}
+      {isPedometerAvailable === false && (
+        <Text style={{color: 'red', textAlign: 'center', margin: 10}}>
+          이 기기는 걸음 수 측정 센서를 지원하지 않습니다.
+        </Text>
+      )}
+      {pedometerError && (
+        <Text style={{color: 'red', textAlign: 'center', margin: 10}}>
+          {pedometerError}
+        </Text>
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
@@ -471,4 +506,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WalkingMeasurementScreen; 
+export default WalkingMeasurementScreen;
