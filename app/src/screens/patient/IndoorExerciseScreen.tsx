@@ -48,6 +48,7 @@ const IndoorExerciseScreen: React.FC = () => {
       benefits: ['근력 강화', '균형 감각 향상', '혈액순환 개선'],
       lastCompleted: '2시간 전',
       recommended: true,
+      type: 'essential', // 필수 운동
     },
     {
       id: '2',
@@ -62,48 +63,7 @@ const IndoorExerciseScreen: React.FC = () => {
       benefits: ['근육 이완', '관절 유연성', '통증 완화'],
       lastCompleted: '1일 전',
       recommended: false,
-    },
-    {
-      id: '3',
-      name: '서서하기 운동',
-      description: '서서하는 다리 근력 강화 운동',
-      duration: '12-15분',
-      difficulty: '보통',
-      icon: '💪',
-      color: '#FF6B35',
-      category: 'strength',
-      target: '근력 측정',
-      benefits: ['근력 강화', '균형 감각', '일상생활 개선'],
-      lastCompleted: '3일 전',
-      recommended: true,
-    },
-    {
-      id: '4',
-      name: '앉아서 다리 운동',
-      description: '앉은 자세에서 하는 다리 운동',
-      duration: '10-12분',
-      difficulty: '쉬움',
-      icon: '🪑',
-      color: '#8B5CF6',
-      category: 'strength',
-      target: '근력 측정',
-      benefits: ['근력 강화', '안정성', '통증 완화'],
-      lastCompleted: '5시간 전',
-      recommended: false,
-    },
-    {
-      id: '5',
-      name: '균형 운동',
-      description: '균형 감각과 안정성 향상',
-      duration: '8-10분',
-      difficulty: '보통',
-      icon: '⚖️',
-      color: '#F59E0B',
-      category: 'balance',
-      target: '균형 측정',
-      benefits: ['균형 감각', '안정성', '낙상 예방'],
-      lastCompleted: '1주일 전',
-      recommended: true,
+      type: 'essential', // 필수 운동
     },
     {
       id: '6',
@@ -118,12 +78,58 @@ const IndoorExerciseScreen: React.FC = () => {
       benefits: ['보행 개선', '자신감 향상', '안전성'],
       lastCompleted: '30분 전',
       recommended: false,
+      type: 'essential', // 필수 운동
+    },
+    {
+      id: '3',
+      name: '서서하기 운동',
+      description: '서서하는 다리 근력 강화 운동',
+      duration: '12-15분',
+      difficulty: '보통',
+      icon: '💪',
+      color: '#FF6B35',
+      category: 'strength',
+      target: '근력 측정',
+      benefits: ['근력 강화', '균형 감각', '일상생활 개선'],
+      lastCompleted: '3일 전',
+      recommended: true,
+      type: 'optional', // 함께하면 좋아요
+    },
+    {
+      id: '4',
+      name: '앉아서 다리 운동',
+      description: '앉은 자세에서 하는 다리 운동',
+      duration: '10-12분',
+      difficulty: '쉬움',
+      icon: '🪑',
+      color: '#8B5CF6',
+      category: 'strength',
+      target: '근력 측정',
+      benefits: ['근력 강화', '안정성', '통증 완화'],
+      lastCompleted: '5시간 전',
+      recommended: false,
+      type: 'optional', // 함께하면 좋아요
+    },
+    {
+      id: '5',
+      name: '균형 운동',
+      description: '균형 감각과 안정성 향상',
+      duration: '8-10분',
+      difficulty: '보통',
+      icon: '⚖️',
+      color: '#F59E0B',
+      category: 'balance',
+      target: '균형 측정',
+      benefits: ['균형 감각', '안정성', '낙상 예방'],
+      lastCompleted: '1주일 전',
+      recommended: true,
+      type: 'optional', // 함께하면 좋아요
     },
   ];
 
   const todayStats = {
     completed: 2,
-    total: 6,
+    total: 3, // 필수 운동 3개로 변경
     time: 25,
     streak: 5,
     weeklyGoal: 80,
@@ -132,6 +138,10 @@ const IndoorExerciseScreen: React.FC = () => {
   const filteredExercises = selectedCategory === 'all' 
     ? exercises 
     : exercises.filter(exercise => exercise.category === selectedCategory);
+
+  // 운동을 타입별로 분류
+  const essentialExercises = filteredExercises.filter(exercise => exercise.type === 'essential');
+  const optionalExercises = filteredExercises.filter(exercise => exercise.type === 'optional');
 
   const handleExercisePress = (exerciseId: string) => {
     setSelectedExercise(exerciseId);
@@ -220,7 +230,7 @@ const IndoorExerciseScreen: React.FC = () => {
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryStat}>
-                <Text style={styles.summaryStatValue}>33%</Text>
+                <Text style={styles.summaryStatValue}>67%</Text>
                 <Text style={styles.summaryStatLabel}>완료율</Text>
               </View>
             </View>
@@ -257,104 +267,211 @@ const IndoorExerciseScreen: React.FC = () => {
 
         {/* Exercise List */}
         <View style={styles.exerciseSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {selectedCategory === 'all' ? '모든 운동' : 
-               categories.find(c => c.id === selectedCategory)?.name + ' 운동'}
-            </Text>
-            <Text style={styles.exerciseCount}>{filteredExercises.length}개</Text>
-          </View>
-          
-          <View style={styles.exerciseList}>
-            {filteredExercises.map((exercise, index) => (
-              <View key={exercise.id}>
-                <View
-                  style={[
-                    styles.exerciseCard,
-                    selectedExercise === exercise.id && styles.selectedExerciseCard,
-                  ]}
-                >
-                  <TouchableOpacity
-                    style={styles.exerciseContent}
-                    onPress={() => handleExercisePress(exercise.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.exerciseHeader}>
-                      <View style={[styles.exerciseIcon, { backgroundColor: exercise.color + '15' }]}>
-                        <Text style={styles.exerciseIconText}>{exercise.icon}</Text>
-                      </View>
-                      <View style={styles.exerciseInfo}>
-                        <View style={styles.exerciseTitleRow}>
-                          <Text style={styles.exerciseName}>{exercise.name}</Text>
-                          {exercise.recommended && (
-                            <View style={styles.recommendedBadge}>
-                              <Text style={styles.recommendedText}>추천</Text>
-                            </View>
-                          )}
-                        </View>
-                        <Text style={styles.exerciseDescription}>{exercise.description}</Text>
-                        <View style={styles.exerciseMeta}>
-                          <View style={styles.metaItem}>
-                            <Text style={styles.metaIcon}>⏱️</Text>
-                            <Text style={styles.metaText}>{exercise.duration}</Text>
-                          </View>
-                          <View style={styles.metaItem}>
-                            <Text style={styles.metaIcon}>📊</Text>
-                            <Text style={styles.metaText}>{exercise.difficulty}</Text>
-                          </View>
-                          <View style={styles.metaItem}>
-                            <Text style={styles.metaIcon}>🕐</Text>
-                            <Text style={styles.metaText}>{exercise.lastCompleted}</Text>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-
-                {/* 인라인 상세 정보 */}
-                {selectedExercise === exercise.id && (
-                  <View style={styles.inlineDetailCard}>
-                    <View style={styles.detailHeader}>
-                      <Text style={styles.detailTitle}>운동 효과</Text>
-                      <TouchableOpacity 
-                        style={styles.closeButton}
-                        onPress={() => setSelectedExercise(null)}
+          {/* 필수 운동 섹션 */}
+          {essentialExercises.length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>필수 운동</Text>
+                <Text style={styles.exerciseCount}>{essentialExercises.length}개</Text>
+              </View>
+              
+              <View style={styles.exerciseList}>
+                {essentialExercises.map((exercise, index) => (
+                  <View key={exercise.id}>
+                    <View
+                      style={[
+                        styles.exerciseCard,
+                        selectedExercise === exercise.id && styles.selectedExerciseCard,
+                        styles.essentialExerciseCard, // 필수 운동 스타일
+                      ]}
+                    >
+                      <TouchableOpacity
+                        style={styles.exerciseContent}
+                        onPress={() => handleExercisePress(exercise.id)}
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.closeButtonText}>×</Text>
+                        <View style={styles.exerciseHeader}>
+                          <View style={[styles.exerciseIcon, { backgroundColor: exercise.color + '15' }]}>
+                            <Text style={styles.exerciseIconText}>{exercise.icon}</Text>
+                          </View>
+                          <View style={styles.exerciseInfo}>
+                            <View style={styles.exerciseTitleRow}>
+                              <Text style={styles.exerciseName}>{exercise.name}</Text>
+                              <View style={styles.essentialBadge}>
+                                <Text style={styles.essentialText}>필수</Text>
+                              </View>
+                              {exercise.recommended && (
+                                <View style={styles.recommendedBadge}>
+                                  <Text style={styles.recommendedText}>추천</Text>
+                                </View>
+                              )}
+                            </View>
+                            <Text style={styles.exerciseDescription}>{exercise.description}</Text>
+                            <View style={styles.exerciseMeta}>
+                              <View style={styles.metaItem}>
+                                <Text style={styles.metaIcon}>⏱️</Text>
+                                <Text style={styles.metaText}>{exercise.duration}</Text>
+                              </View>
+                              <View style={styles.metaItem}>
+                                <Text style={styles.metaIcon}>📊</Text>
+                                <Text style={styles.metaText}>{exercise.difficulty}</Text>
+                              </View>
+                              <View style={styles.metaItem}>
+                                <Text style={styles.metaIcon}>🕐</Text>
+                                <Text style={styles.metaText}>{exercise.lastCompleted}</Text>
+                              </View>
+                            </View>
+                          </View>
+                        </View>
                       </TouchableOpacity>
                     </View>
-                    
-                    <View style={styles.benefitsContainer}>
-                      <View style={styles.benefitsList}>
-                        {exercise.benefits.map((benefit, benefitIndex) => (
-                          <View key={benefitIndex} style={styles.benefitItem}>
-                            <Text style={styles.benefitIcon}>✓</Text>
-                            <Text style={styles.benefitText}>{benefit}</Text>
+
+                    {/* 인라인 상세 정보 */}
+                    {selectedExercise === exercise.id && (
+                      <View style={styles.inlineDetailCard}>
+                        <View style={styles.detailHeader}>
+                          <Text style={styles.detailTitle}>운동 효과</Text>
+                          <TouchableOpacity 
+                            style={styles.closeButton}
+                            onPress={() => setSelectedExercise(null)}
+                          >
+                            <Text style={styles.closeButtonText}>×</Text>
+                          </TouchableOpacity>
+                        </View>
+                        
+                        <View style={styles.benefitsContainer}>
+                          <View style={styles.benefitsList}>
+                            {exercise.benefits.map((benefit, benefitIndex) => (
+                              <View key={benefitIndex} style={styles.benefitItem}>
+                                <Text style={styles.benefitIcon}>✓</Text>
+                                <Text style={styles.benefitText}>{benefit}</Text>
+                              </View>
+                            ))}
                           </View>
-                        ))}
+                        </View>
+
+                        <View style={styles.targetContainer}>
+                          <Text style={styles.targetLabel}>측정 항목</Text>
+                          <Text style={styles.targetValue}>{exercise.target}</Text>
+                        </View>
+
+                        <TouchableOpacity
+                          style={styles.startButton}
+                          onPress={() => handleExerciseStart(exercise.id)}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.startButtonText}>
+                            {exercise.target} 시작하기
+                          </Text>
+                        </TouchableOpacity>
                       </View>
-                    </View>
-
-                    <View style={styles.targetContainer}>
-                      <Text style={styles.targetLabel}>측정 항목</Text>
-                      <Text style={styles.targetValue}>{exercise.target}</Text>
-                    </View>
-
-                    <TouchableOpacity
-                      style={styles.startButton}
-                      onPress={() => handleExerciseStart(exercise.id)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.startButtonText}>
-                        {exercise.target} 시작하기
-                      </Text>
-                    </TouchableOpacity>
+                    )}
                   </View>
-                )}
+                ))}
               </View>
-            ))}
-          </View>
+            </>
+          )}
+
+          {/* 함께하면 좋아요 운동 섹션 */}
+          {optionalExercises.length > 0 && (
+            <>
+              <View style={[styles.sectionHeader, { marginTop: 32 }]}>
+                <Text style={styles.sectionTitle}>함께하면 좋아요</Text>
+                <Text style={styles.exerciseCount}>{optionalExercises.length}개</Text>
+              </View>
+              
+              <View style={styles.exerciseList}>
+                {optionalExercises.map((exercise, index) => (
+                  <View key={exercise.id}>
+                    <View
+                      style={[
+                        styles.exerciseCard,
+                        selectedExercise === exercise.id && styles.selectedExerciseCard,
+                      ]}
+                    >
+                      <TouchableOpacity
+                        style={styles.exerciseContent}
+                        onPress={() => handleExercisePress(exercise.id)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.exerciseHeader}>
+                          <View style={[styles.exerciseIcon, { backgroundColor: exercise.color + '15' }]}>
+                            <Text style={styles.exerciseIconText}>{exercise.icon}</Text>
+                          </View>
+                          <View style={styles.exerciseInfo}>
+                            <View style={styles.exerciseTitleRow}>
+                              <Text style={styles.exerciseName}>{exercise.name}</Text>
+                              {exercise.recommended && (
+                                <View style={styles.recommendedBadge}>
+                                  <Text style={styles.recommendedText}>추천</Text>
+                                </View>
+                              )}
+                            </View>
+                            <Text style={styles.exerciseDescription}>{exercise.description}</Text>
+                            <View style={styles.exerciseMeta}>
+                              <View style={styles.metaItem}>
+                                <Text style={styles.metaIcon}>⏱️</Text>
+                                <Text style={styles.metaText}>{exercise.duration}</Text>
+                              </View>
+                              <View style={styles.metaItem}>
+                                <Text style={styles.metaIcon}>📊</Text>
+                                <Text style={styles.metaText}>{exercise.difficulty}</Text>
+                              </View>
+                              <View style={styles.metaItem}>
+                                <Text style={styles.metaIcon}>🕐</Text>
+                                <Text style={styles.metaText}>{exercise.lastCompleted}</Text>
+                              </View>
+                            </View>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* 인라인 상세 정보 */}
+                    {selectedExercise === exercise.id && (
+                      <View style={styles.inlineDetailCard}>
+                        <View style={styles.detailHeader}>
+                          <Text style={styles.detailTitle}>운동 효과</Text>
+                          <TouchableOpacity 
+                            style={styles.closeButton}
+                            onPress={() => setSelectedExercise(null)}
+                          >
+                            <Text style={styles.closeButtonText}>×</Text>
+                          </TouchableOpacity>
+                        </View>
+                        
+                        <View style={styles.benefitsContainer}>
+                          <View style={styles.benefitsList}>
+                            {exercise.benefits.map((benefit, benefitIndex) => (
+                              <View key={benefitIndex} style={styles.benefitItem}>
+                                <Text style={styles.benefitIcon}>✓</Text>
+                                <Text style={styles.benefitText}>{benefit}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+
+                        <View style={styles.targetContainer}>
+                          <Text style={styles.targetLabel}>측정 항목</Text>
+                          <Text style={styles.targetValue}>{exercise.target}</Text>
+                        </View>
+
+                        <TouchableOpacity
+                          style={styles.startButton}
+                          onPress={() => handleExerciseStart(exercise.id)}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.startButtonText}>
+                            {exercise.target} 시작하기
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -712,6 +829,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  essentialExerciseCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#10B981',
+  },
+  essentialBadge: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  essentialText: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 });
 
