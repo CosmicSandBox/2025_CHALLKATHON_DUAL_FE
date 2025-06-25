@@ -67,9 +67,16 @@ const WalkingMeasurementScreen: React.FC = () => {
     const now = Date.now();
     setStartTimestamp(now);
     setElapsedTime(0);
+    
     timerRef.current = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
+      setElapsedTime(prev => {
+        const newTime = prev + 1;
+        console.log('Timer tick:', newTime);
+        return newTime;
+      });
     }, 1000);
+    
+    console.log('Timer started at:', new Date(now).toISOString());
   };
 
   // 타이머 정지
@@ -77,63 +84,145 @@ const WalkingMeasurementScreen: React.FC = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
+      console.log('Timer stopped');
     }
     setStartTimestamp(null);
   };
 
-  // 센서 지원 여부 확인
+  // 센서 지원 여부 확인 및 권한 요청
   useEffect(() => {
-    // 센서 지원 여부 확인
-    Pedometer.isAvailableAsync()
-      .then(result => setIsPedometerAvailable(result))
-      .catch(() => setIsPedometerAvailable(false));
-
-    // 신체 활동 권한 요청 (expo-sensors에서 지원)
-    const requestPedometerPermission = async () => {
-      if (Pedometer.requestPermissionsAsync) {
-        const { status } = await Pedometer.requestPermissionsAsync();
-        if (status !== 'granted') {
-          setPedometerError('신체 활동 권한이 필요합니다. 설정에서 권한을 허용해 주세요.');
+    const initializePedometer = async () => {
+      try {
+        // 센서 지원 여부 확인
+        const isAvailable = await Pedometer.isAvailableAsync();
+        setIsPedometerAvailable(isAvailable);
+        
+        if (!isAvailable) {
+          setPedometerError('이 기기는 걸음 수 측정 센서를 지원하지 않습니다.');
+          return;
         }
+
+        // 권한 요청
+        if (Pedometer.requestPermissionsAsync) {
+          const { status } = await Pedometer.requestPermissionsAsync();
+          if (status !== 'granted') {
+            setPedometerError('신체 활동 권한이 필요합니다. 설정에서 권한을 허용해 주세요.');
+          } else {
+            console.log('Pedometer permission granted');
+          }
+        }
+      } catch (error) {
+        console.error('Pedometer initialization error:', error);
+        setIsPedometerAvailable(false);
+        setPedometerError('걸음 수 센서 초기화 중 오류가 발생했습니다.');
       }
     };
-    requestPedometerPermission();
+    
+    initializePedometer();
   }, []);
 
   // 실제 걸음 수 측정 함수
   const subscribePedometer = () => {
     setPedometerError(null);
     try {
+      console.log('Starting pedometer subscription...');
+      
+      // 현재 걸음 수를 기준점으로 설정
+      const startTime = new Date();
+      
       pedometerSubscription.current = Pedometer.watchStepCount(result => {
-        setSteps(result.steps);
-        // 평균 보폭 60cm로 거리 계산
-        setDistance(Math.round(result.steps * 0.6 * 100) / 100);
-        // 평균 체중 60kg 기준 칼로리 계산 (걸음당 약 0.04kcal)
-        setCalories(Math.round(result.steps * 0.04 * 100) / 100);
+        console.log('Pedometer update:', result);
+        const currentSteps = result.steps;
+        
+        setSteps(currentSteps);
+        
+        // 평균 보폭 70cm로 거리 계산 (미터 단위)
+        const distanceInMeters = Math.round(currentSteps * 0.7 * 100) / 100;
+        setDistance(distanceInMeters);
+        
+        // 평균 체중 65kg 기준, 걸음당 약 0.045kcal 계산
+        const caloriesBurned = Math.round(currentSteps * 0.045 * 100) / 100;
+        setCalories(caloriesBurned);
       });
-    } catch (e) {
-      setPedometerError('걸음 수 센서 구독 중 오류가 발생했습니다.');
+      
+      console.log('Pedometer subscription started successfully');
+    } catch (error) {
+      console.error('Pedometer subscription error:', error);
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+      setPedometerError('걸음 수 센서 구독 중 오류가 발생했습니다: ' + errorMessage);
+      
+      // 시뮬레이터나 센서가 없는 경우 더미 데이터 사용
+      console.log('Starting dummy data simulation...');
+      startDummyData();
     }
+  };
+
+  // 시뮬레이터용 더미 데이터 (테스트용)
+  const startDummyData = () => {
+    let simulatedSteps = 0;
+    pedometerSubscription.current = setInterval(() => {
+      simulatedSteps += Math.floor(Math.random() * 3) + 1; // 1-3 걸음씩 증가
+      
+      setSteps(simulatedSteps);
+      
+      // 평균 보폭 70cm로 거리 계산
+      const distanceInMeters = Math.round(simulatedSteps * 0.7 * 100) / 100;
+      setDistance(distanceInMeters);
+      
+      // 칼로리 계산
+      const caloriesBurned = Math.round(simulatedSteps * 0.045 * 100) / 100;
+      setCalories(caloriesBurned);
+      
+      console.log('Dummy data:', { steps: simulatedSteps, distance: distanceInMeters, calories: caloriesBurned });
+    }, 1500); // 1.5초마다 업데이트
   };
 
   const unsubscribePedometer = () => {
     if (pedometerSubscription.current) {
-      pedometerSubscription.current.remove();
+      console.log('Unsubscribing from pedometer...');
+      
+      // 실제 센서 구독 해제 또는 더미 데이터 interval 해제
+      if (typeof pedometerSubscription.current.remove === 'function') {
+        pedometerSubscription.current.remove();
+      } else {
+        clearInterval(pedometerSubscription.current);
+      }
+      
       pedometerSubscription.current = null;
+      console.log('Pedometer unsubscribed successfully');
     }
   };
 
   const startWalking = () => {
+    if (!isPedometerAvailable) {
+      Alert.alert('오류', '걸음 수 센서를 사용할 수 없습니다.');
+      return;
+    }
+
+    console.log('Starting walking measurement...');
+    
+    // 모든 상태 초기화
     setIsWalking(true);
     setSteps(0);
     setDistance(0);
     setCalories(0);
     setElapsedTime(0);
     setPace(0);
-    setStartTimestamp(Date.now()); // 추가
+    setPedometerError(null);
+    
+    const now = Date.now();
+    setStartTimestamp(now);
+    
+    // 타이머 시작
     startTimer();
+    
+    // 걸음 수 측정 시작
     subscribePedometer();
+    
+    // 애니메이션 시작
     startPulseAnimation();
+    
+    console.log('Walking measurement started successfully');
   };
 
   const stopWalking = () => {
@@ -145,15 +234,20 @@ const WalkingMeasurementScreen: React.FC = () => {
         { 
           text: '종료', 
           onPress: () => {
+            console.log('Stopping walking measurement...');
+            
             setIsWalking(false);
             stopTimer();
             unsubscribePedometer();
             stopPulseAnimation();
+            
             // 건강 상태 체크로 이동
             navigation.navigate('HealthCheck', {
               exerciseName: '가벼운 걷기',
               exerciseType: 'walking'
             });
+            
+            console.log('Walking measurement stopped');
           }
         },
       ]
@@ -187,6 +281,7 @@ const WalkingMeasurementScreen: React.FC = () => {
   // 컴포넌트 언마운트 시 타이머 정리
   useEffect(() => {
     return () => {
+      console.log('Component unmounting, cleaning up...');
       stopTimer();
       unsubscribePedometer();
       stopPulseAnimation();
@@ -195,7 +290,9 @@ const WalkingMeasurementScreen: React.FC = () => {
 
   // AppState로 백그라운드/포그라운드 감지 및 경과 시간 보정
   useEffect(() => {
-    const handleAppStateChange = (nextAppState: AppStateStatus) => { // 타입 명시
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      console.log('App state changed:', appState.current, '->', nextAppState);
+      
       if (
         appState.current.match(/inactive|background/) &&
         nextAppState === 'active' &&
@@ -204,11 +301,25 @@ const WalkingMeasurementScreen: React.FC = () => {
       ) {
         // 포그라운드 복귀 시 실제 경과 시간 보정
         const now = Date.now();
-        const elapsed = Math.floor((now - startTimestamp) / 1000);
-        setElapsedTime(elapsed);
+        const actualElapsed = Math.floor((now - startTimestamp) / 1000);
+        console.log('Correcting elapsed time to:', actualElapsed);
+        setElapsedTime(actualElapsed);
+        
+        // 타이머 재시작 (정확한 시간 계산을 위해)
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+        timerRef.current = setInterval(() => {
+          setElapsedTime(prev => {
+            const newTime = Math.floor((Date.now() - startTimestamp) / 1000);
+            return newTime;
+          });
+        }, 1000);
       }
-      appState.current = nextAppState; // 타입 오류 해결
+      
+      appState.current = nextAppState;
     };
+    
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => {
       subscription.remove();
@@ -217,8 +328,11 @@ const WalkingMeasurementScreen: React.FC = () => {
 
   // 페이스 계산: steps, elapsedTime이 바뀔 때마다 계산
   useEffect(() => {
-    if (isWalking && elapsedTime > 0) {
-      setPace(Math.round((steps * 60) / elapsedTime));
+    if (isWalking && elapsedTime > 0 && steps > 0) {
+      // 분당 걸음 수 계산
+      const pacePerMinute = Math.round((steps * 60) / elapsedTime);
+      setPace(pacePerMinute);
+      console.log(`Pace calculated: ${steps} steps in ${elapsedTime}s = ${pacePerMinute} steps/min`);
     } else {
       setPace(0);
     }
@@ -234,14 +348,32 @@ const WalkingMeasurementScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* 센서 지원/에러 안내 */}
       {isPedometerAvailable === false && (
-        <Text style={{color: 'red', textAlign: 'center', margin: 10}}>
-          이 기기는 걸음 수 측정 센서를 지원하지 않습니다.
-        </Text>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            이 기기는 걸음 수 측정 센서를 지원하지 않습니다.
+          </Text>
+        </View>
       )}
       {pedometerError && (
-        <Text style={{color: 'red', textAlign: 'center', margin: 10}}>
-          {pedometerError}
-        </Text>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            {pedometerError}
+          </Text>
+        </View>
+      )}
+      {isPedometerAvailable === null && (
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoText}>
+            센서 상태를 확인하는 중...
+          </Text>
+        </View>
+      )}
+      {isPedometerAvailable && !pedometerError && (
+        <View style={styles.successContainer}>
+          <Text style={styles.successText}>
+            걸음 수 센서가 사용 가능합니다
+          </Text>
+        </View>
       )}
 
       {/* Header */}
@@ -541,6 +673,45 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: Colors.background,
     fontWeight: '600',
+  },
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    padding: Spacing.sm,
+    margin: Spacing.sm,
+    borderRadius: Spacing.xs,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F44336',
+  },
+  errorText: {
+    color: '#D32F2F',
+    textAlign: 'center',
+    ...Typography.body,
+  },
+  infoContainer: {
+    backgroundColor: '#E3F2FD',
+    padding: Spacing.sm,
+    margin: Spacing.sm,
+    borderRadius: Spacing.xs,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+  },
+  infoText: {
+    color: '#1976D2',
+    textAlign: 'center',
+    ...Typography.body,
+  },
+  successContainer: {
+    backgroundColor: '#E8F5E8',
+    padding: Spacing.sm,
+    margin: Spacing.sm,
+    borderRadius: Spacing.xs,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  successText: {
+    color: '#388E3C',
+    textAlign: 'center',
+    ...Typography.body,
   },
 });
 
