@@ -36,6 +36,8 @@ export type MainTabParamList = {
   Indoor: undefined;
   Outdoor: undefined;
   Settings: undefined;
+  PainRecord: undefined;
+  ExerciseHistory: undefined;
 };
 
 export type IndoorStackParamList = {

@@ -9,14 +9,20 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
-import { MainTabParamList } from '../../navigation/types';
 
-type DashboardScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Dashboard'>;
+// MainNavigator의 Stack Navigator를 위한 타입 정의
+type MainStackParamList = {
+  MainTabs: undefined;
+  PainRecord: undefined;
+  ExerciseHistory: undefined;
+};
+
+type DashboardScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
@@ -50,23 +56,26 @@ const DashboardScreen: React.FC = () => {
   };
 
   const handleIndoorExercise = () => {
-    navigation.navigate('Indoor');
+    // @ts-ignore - Tab navigation within stack
+    navigation.getParent()?.navigate('Indoor');
   };
 
   const handleOutdoorExercise = () => {
-    navigation.navigate('Outdoor');
+    // @ts-ignore - Tab navigation within stack
+    navigation.getParent()?.navigate('Outdoor');
   };
 
   const handlePainRecord = () => {
-    console.log('통증 기록 화면으로 이동');
+    navigation.navigate('PainRecord');
   };
 
   const handleExerciseHistory = () => {
-    console.log('운동 기록 화면으로 이동');
+    navigation.navigate('ExerciseHistory');
   };
 
   const handleSettings = () => {
-    navigation.navigate('Settings');
+    // @ts-ignore - Tab navigation within stack
+    navigation.getParent()?.navigate('Settings');
   };
 
   return (

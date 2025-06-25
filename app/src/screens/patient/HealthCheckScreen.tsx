@@ -131,13 +131,34 @@ const HealthCheckScreen: React.FC = () => {
 
   const saveAndExit = () => {
     // 여기에 건강 상태 데이터 저장 로직 추가
-    console.log('Health Check Data:', {
+    const healthCheckData = {
       exerciseName: params?.exerciseName,
       exerciseType: params?.exerciseType,
       symptoms,
       detailNotes,
       timestamp: new Date().toISOString(),
-    });
+    };
+    
+    console.log('Health Check Data:', healthCheckData);
+
+    // 운동 기록에 저장할 데이터 생성
+    const exerciseRecord = {
+      id: Date.now().toString(),
+      date: new Date().toISOString().split('T')[0],
+      time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+      type: 'indoor' as const,
+      subType: params?.exerciseType || 'walking',
+      name: params?.exerciseName || '실내 운동',
+      duration: 15, // 기본값, 실제로는 운동 시간을 전달받아야 함
+      painAfter: Object.values(symptoms).filter(s => s !== null).length > 0 
+        ? Math.round(Object.values(symptoms).reduce((sum, s) => sum + (s === 'good' ? 1 : s === 'mild' ? 3 : s === 'moderate' ? 6 : 8), 0) / Object.values(symptoms).filter(s => s !== null).length)
+        : 0,
+      notes: detailNotes,
+      completionRate: 100,
+      difficulty: 'normal' as const,
+    };
+
+    console.log('Exercise Record Data:', exerciseRecord);
 
     Alert.alert(
       '건강 상태 기록 완료',

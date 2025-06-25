@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { Feather } from '@expo/vector-icons';
@@ -9,30 +10,18 @@ import DashboardScreen from '../screens/patient/DashboardScreen';
 import IndoorNavigator from './IndoorNavigator';
 import OutdoorExerciseScreen from '../screens/patient/OutdoorExerciseScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import PainRecordScreen from '../screens/patient/PainRecordScreen';
+import ExerciseHistoryScreen from '../screens/patient/ExerciseHistoryScreen';
 import CaregiverNavigator from './CaregiverNavigator';
 
 import { Colors } from '../constants/colors';
 import { Typography } from '../constants/typography';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
-const MainNavigator: React.FC = () => {
-  const userRole = useSelector((state: RootState) => state.auth.userRole);
-  const onboardingComplete = useSelector((state: RootState) => state.auth.onboardingComplete);
-
-  useEffect(() => {
-    console.log('🔍 MainNavigator - Current userRole:', userRole);
-    console.log('🔍 MainNavigator - onboardingComplete:', onboardingComplete);
-  }, [userRole, onboardingComplete]);
-
-  // 보호자인 경우 CaregiverNavigator를 렌더링
-  if (userRole === 'caregiver') {
-    console.log('🏥 Rendering CaregiverNavigator');
-    return <CaregiverNavigator />;
-  }
-
-  // 환자인 경우 탭 네비게이터 렌더링
-  console.log('👤 Rendering Patient Tab Navigator');
+// 탭 네비게이터 컴포넌트
+const PatientTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -99,6 +88,32 @@ const MainNavigator: React.FC = () => {
         }}
       />
     </Tab.Navigator>
+  );
+};
+
+const MainNavigator: React.FC = () => {
+  const userRole = useSelector((state: RootState) => state.auth.userRole);
+  const onboardingComplete = useSelector((state: RootState) => state.auth.onboardingComplete);
+
+  useEffect(() => {
+    console.log('🔍 MainNavigator - Current userRole:', userRole);
+    console.log('🔍 MainNavigator - onboardingComplete:', onboardingComplete);
+  }, [userRole, onboardingComplete]);
+
+  // 보호자인 경우 CaregiverNavigator를 렌더링
+  if (userRole === 'caregiver') {
+    console.log('🏥 Rendering CaregiverNavigator');
+    return <CaregiverNavigator />;
+  }
+
+  // 환자인 경우 스택 네비게이터로 탭과 추가 페이지들을 렌더링
+  console.log('👤 Rendering Patient Stack Navigator');
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MainTabs" component={PatientTabNavigator} />
+      <Stack.Screen name="PainRecord" component={PainRecordScreen} />
+      <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryScreen} />
+    </Stack.Navigator>
   );
 };
 
