@@ -9,20 +9,23 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
+import { MainTabParamList } from '../../navigation/types';
 
-// MainNavigator의 Stack Navigator를 위한 타입 정의
-type MainStackParamList = {
-  MainTabs: undefined;
-  PainRecord: undefined;
-  ExerciseHistory: undefined;
-};
+// 탭 네비게이션을 위한 타입 정의
+type TabNavigationProp = BottomTabNavigationProp<MainTabParamList>;
 
-type DashboardScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
+// Stack과 Tab을 함께 사용하기 위한 복합 타입
+type DashboardScreenNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<{ PainRecord: undefined; ExerciseHistory: undefined }>,
+  TabNavigationProp
+>;
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
@@ -45,8 +48,6 @@ const DashboardScreen: React.FC = () => {
     { day: '일', steps: 3247, pain: 3 },
   ];
 
-
-
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 5) return '좋은 새벽이에요';
@@ -56,26 +57,48 @@ const DashboardScreen: React.FC = () => {
   };
 
   const handleIndoorExercise = () => {
-    // @ts-ignore - Tab navigation within stack
-    navigation.getParent()?.navigate('Indoor');
+    try {
+      console.log('🏠 실내 운동 버튼 클릭');
+      navigation.navigate('Indoor' as never);
+    } catch (error) {
+      console.error('❌ 실내 운동 네비게이션 에러:', error);
+    }
   };
 
   const handleOutdoorExercise = () => {
-    // @ts-ignore - Tab navigation within stack
-    navigation.getParent()?.navigate('Outdoor');
+    try {
+      console.log('🌳 실외 운동 버튼 클릭');
+      navigation.navigate('Outdoor' as never);
+    } catch (error) {
+      console.error('❌ 실외 운동 네비게이션 에러:', error);
+    }
   };
 
   const handlePainRecord = () => {
-    navigation.navigate('PainRecord');
+    try {
+      console.log('📝 통증 기록 버튼 클릭');
+      navigation.navigate('PainRecord' as never);
+    } catch (error) {
+      console.error('❌ 통증 기록 네비게이션 에러:', error);
+    }
   };
 
   const handleExerciseHistory = () => {
-    navigation.navigate('ExerciseHistory');
+    try {
+      console.log('📊 운동 기록 버튼 클릭');
+      navigation.navigate('ExerciseHistory' as never);
+    } catch (error) {
+      console.error('❌ 운동 기록 네비게이션 에러:', error);
+    }
   };
 
   const handleSettings = () => {
-    // @ts-ignore - Tab navigation within stack
-    navigation.getParent()?.navigate('Settings');
+    try {
+      console.log('⚙️ 설정 버튼 클릭');
+      navigation.navigate('Settings' as never);
+    } catch (error) {
+      console.error('❌ 설정 네비게이션 에러:', error);
+    }
   };
 
   return (
@@ -153,6 +176,7 @@ const DashboardScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.indoorAction}
               onPress={handleIndoorExercise}
+              activeOpacity={0.7}
             >
               <View style={styles.actionContent}>
                 <View style={styles.actionHeader}>
@@ -169,6 +193,7 @@ const DashboardScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.outdoorAction}
               onPress={handleOutdoorExercise}
+              activeOpacity={0.7}
             >
               <View style={styles.actionContent}>
                 <View style={styles.actionHeader}>
@@ -189,6 +214,7 @@ const DashboardScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.additionalAction}
               onPress={handlePainRecord}
+              activeOpacity={0.7}
             >
               <Text style={styles.additionalActionTitle}>통증 기록</Text>
               <Text style={styles.additionalActionSubtitle}>
@@ -199,6 +225,7 @@ const DashboardScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.additionalAction}
               onPress={handleExerciseHistory}
+              activeOpacity={0.7}
             >
               <Text style={styles.additionalActionTitle}>운동 기록</Text>
               <Text style={styles.additionalActionSubtitle}>전체 기록 보기</Text>
@@ -563,4 +590,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DashboardScreen; 
+export default DashboardScreen;
