@@ -1,24 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 import AuthNavigator from './AuthNavigator';
 import OnboardingNavigator from './OnboardingNavigator';
 import MainNavigator from './MainNavigator';
-import IndoorExerciseScreen from '../screens/patient/IndoorExerciseScreen';
-import OutdoorExerciseScreen from '../screens/patient/OutdoorExerciseScreen';
-import SettingsScreen from '../screens/settings/SettingsScreen';
-import WalkingMeasurementScreen from '../screens/patient/WalkingMeasurementScreen';
-import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
 import CaregiverNavigator from './CaregiverNavigator';
 import SplashScreen from '../screens/splash/SplashScreen';
 
 import { RootStackParamList } from './types';
 import { restoreToken, setRole, completeOnboarding } from '../store/slices/authSlice';
+import { restoreAuthToken } from '../api';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -36,9 +30,19 @@ const RootNavigator: React.FC = () => {
         const role = await AsyncStorage.getItem('userRole');
         const onboardingStatus = await AsyncStorage.getItem('onboardingComplete');
         
-        if (token) dispatch(restoreToken({ token }));
-        if (role) dispatch(setRole(role as 'patient' | 'caregiver'));
-        if (onboardingStatus === 'true') dispatch(completeOnboarding());
+        if (token) {
+          dispatch(restoreToken({ token }));
+          // API 클라이언트에도 토큰 설정
+          restoreAuthToken(token);
+        }
+        
+        if (role) {
+          dispatch(setRole(role as 'patient' | 'caregiver'));
+        }
+        
+        if (onboardingStatus === 'true') {
+          dispatch(completeOnboarding());
+        }
 
       } catch (e) {
         console.warn('Failed to load data from storage', e);
@@ -71,4 +75,4 @@ const RootNavigator: React.FC = () => {
   );
 };
 
-export default RootNavigator; 
+export default RootNavigator;
