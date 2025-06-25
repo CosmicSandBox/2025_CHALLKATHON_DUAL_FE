@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator, // 추가
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,6 +17,8 @@ import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { RootStackParamList } from '../../navigation/types';
 import { Feather } from '@expo/vector-icons';
+import * as Location from 'expo-location'; // 추가
+import { WebView } from 'react-native-webview'; // 추가
 
 type OutdoorExerciseScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
@@ -24,6 +27,9 @@ const OutdoorExerciseScreen: React.FC = () => {
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
   const [isExerciseStarted, setIsExerciseStarted] = useState(false);
   const [currentDistance, setCurrentDistance] = useState(0);
+  const [showMap, setShowMap] = useState(false); // 추가
+  const [mapUrl, setMapUrl] = useState(''); // 추가
+  const [loading, setLoading] = useState(false); // 추가
 
   const routes = [
     {
@@ -109,13 +115,28 @@ const OutdoorExerciseScreen: React.FC = () => {
     }
   };
 
-  const startExercise = () => {
+  const startExercise = async () => {
     if (!selectedRoute) {
       Alert.alert('경로 선택', '운동 경로를 선택해주세요.');
       return;
     }
-    setIsExerciseStarted(true);
-    // 실제로는 GPS 추적 시작 로직
+    setLoading(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('위치 권한 필요', '위치 권한을 허용해주세요.');
+        setLoading(false);
+        return;
+      }
+      const location = await Location.getCurrentPositionAsync({});
+      // 카카오 지도 URL (좌표 중심)
+      const url = `https://map.kakao.com/link/map/${location.coords.latitude},${location.coords.longitude}`;
+      setMapUrl(url);
+      setShowMap(true);
+    } catch (e) {
+      Alert.alert('위치 오류', '현재 위치를 가져올 수 없습니다.');
+    }
+    setLoading(false);
   };
 
   const stopExercise = () => {
@@ -148,169 +169,176 @@ const OutdoorExerciseScreen: React.FC = () => {
           <Text style={styles.headerSubtitle}>안전하고 효과적인 실외 운동을 시작해보세요</Text>
         </View>
       </View>
-
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Weather Info */}
-        <View style={styles.weatherSection}>
-          <Card style={styles.weatherCard}>
-            <View style={styles.weatherHeader}>
-              <Text style={styles.weatherTitle}>오늘의 날씨</Text>
-              <Text style={styles.weatherIcon}>☀️</Text>
-            </View>
-            <View style={styles.weatherStats}>
-              <View style={styles.weatherItem}>
-                <Text style={styles.weatherValue}>{weatherInfo.temperature}°C</Text>
-                <Text style={styles.weatherLabel}>기온</Text>
+      {showMap && mapUrl ? (
+        <WebView source={{ uri: mapUrl }} style={{ flex: 1 }} />
+      ) : (
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Weather Info */}
+          <View style={styles.weatherSection}>
+            <Card style={styles.weatherCard}>
+              <View style={styles.weatherHeader}>
+                <Text style={styles.weatherTitle}>오늘의 날씨</Text>
+                <Text style={styles.weatherIcon}>☀️</Text>
               </View>
-              <View style={styles.weatherItem}>
-                <Text style={styles.weatherValue}>{weatherInfo.condition}</Text>
-                <Text style={styles.weatherLabel}>날씨</Text>
-              </View>
-              <View style={styles.weatherItem}>
-                <Text style={styles.weatherValue}>{weatherInfo.humidity}%</Text>
-                <Text style={styles.weatherLabel}>습도</Text>
-              </View>
-              <View style={styles.weatherItem}>
-                <Text style={styles.weatherValue}>{weatherInfo.windSpeed}m/s</Text>
-                <Text style={styles.weatherLabel}>풍속</Text>
-              </View>
-            </View>
-          </Card>
-        </View>
-
-        {/* Today's Progress */}
-        <View style={styles.progressSection}>
-          <Card style={styles.progressCard}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>오늘의 진행상황</Text>
-              <Text style={styles.progressValue}>{todayStats.completed}/{todayStats.total}</Text>
-            </View>
-            <View style={styles.progressBar}>
-              <View 
-                style={[
-                  styles.progressFill, 
-                  { width: `${(todayStats.completed / todayStats.total) * 100}%` }
-                ]} 
-              />
-            </View>
-            <View style={styles.progressStats}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{todayStats.distance}km</Text>
-                <Text style={styles.statLabel}>총 거리</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{todayStats.time}분</Text>
-                <Text style={styles.statLabel}>총 시간</Text>
-              </View>
-            </View>
-          </Card>
-        </View>
-
-        {/* Route Selection */}
-        <View style={styles.routeSection}>
-          <Text style={styles.sectionTitle}>운동 경로 선택</Text>
-          <View style={styles.routeGrid}>
-            {routes.map((route) => (
-              <TouchableOpacity
-                key={route.id}
-                style={[
-                  styles.routeCard,
-                  selectedRoute === route.id && styles.selectedRouteCard
-                ]}
-                onPress={() => setSelectedRoute(route.id)}
-              >
-                <View style={styles.routeHeader}>
-                  <View style={[styles.routeIcon, { backgroundColor: route.color + '20' }]}>
-                    <Text style={styles.routeIconText}>{route.icon}</Text>
-                  </View>
-                  <View style={styles.routeInfo}>
-                    <Text style={styles.routeName}>{route.name}</Text>
-                    <Text style={styles.routeDescription}>{route.description}</Text>
-                  </View>
+              <View style={styles.weatherStats}>
+                <View style={styles.weatherItem}>
+                  <Text style={styles.weatherValue}>{weatherInfo.temperature}°C</Text>
+                  <Text style={styles.weatherLabel}>기온</Text>
                 </View>
-                <View style={styles.routeMeta}>
-                  <View style={styles.metaItem}>
-                    <Text style={styles.metaLabel}>거리</Text>
-                    <Text style={styles.metaValue}>{route.distance}</Text>
-                  </View>
-                  <View style={styles.metaItem}>
-                    <Text style={styles.metaLabel}>시간</Text>
-                    <Text style={styles.metaValue}>{route.duration}</Text>
-                  </View>
-                  <View style={styles.metaItem}>
-                    <Text style={styles.metaLabel}>난이도</Text>
-                    <Text style={styles.metaValue}>{route.difficulty}</Text>
-                  </View>
+                <View style={styles.weatherItem}>
+                  <Text style={styles.weatherValue}>{weatherInfo.condition}</Text>
+                  <Text style={styles.weatherLabel}>날씨</Text>
                 </View>
-                <View style={styles.routeFeatures}>
-                  {route.features.map((feature, index) => (
-                    <View key={index} style={styles.featureTag}>
-                      <Text style={styles.featureText}>{feature}</Text>
-                    </View>
-                  ))}
+                <View style={styles.weatherItem}>
+                  <Text style={styles.weatherValue}>{weatherInfo.humidity}%</Text>
+                  <Text style={styles.weatherLabel}>습도</Text>
                 </View>
-              </TouchableOpacity>
-            ))}
+                <View style={styles.weatherItem}>
+                  <Text style={styles.weatherValue}>{weatherInfo.windSpeed}m/s</Text>
+                  <Text style={styles.weatherLabel}>풍속</Text>
+                </View>
+              </View>
+            </Card>
           </View>
-        </View>
 
-        {/* Safety Tips */}
-        <View style={styles.safetySection}>
-          <Text style={styles.sectionTitle}>안전 수칙</Text>
-          <Card style={styles.safetyCard}>
-            <View style={styles.safetyItem}>
-              <View style={styles.safetyIcon}>
-                <Text style={styles.safetyIconText}>🚶‍♂️</Text>
+          {/* Today's Progress */}
+          <View style={styles.progressSection}>
+            <Card style={styles.progressCard}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressTitle}>오늘의 진행상황</Text>
+                <Text style={styles.progressValue}>{todayStats.completed}/{todayStats.total}</Text>
               </View>
-              <Text style={styles.safetyText}>보행자 도로를 이용하세요</Text>
-            </View>
-            <View style={styles.safetyItem}>
-              <View style={styles.safetyIcon}>
-                <Text style={styles.safetyIconText}>👕</Text>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { width: `${(todayStats.completed / todayStats.total) * 100}%` }
+                  ]} 
+                />
               </View>
-              <Text style={styles.safetyText}>밝은 색의 옷을 입으세요</Text>
-            </View>
-            <View style={styles.safetyItem}>
-              <View style={styles.safetyIcon}>
-                <Text style={styles.safetyIconText}>💧</Text>
+              <View style={styles.progressStats}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{todayStats.distance}km</Text>
+                  <Text style={styles.statLabel}>총 거리</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{todayStats.time}분</Text>
+                  <Text style={styles.statLabel}>총 시간</Text>
+                </View>
               </View>
-              <Text style={styles.safetyText}>충분한 수분을 섭취하세요</Text>
-            </View>
-            <View style={styles.safetyItem}>
-              <View style={styles.safetyIcon}>
-                <Text style={styles.safetyIconText}>📱</Text>
-              </View>
-              <Text style={styles.safetyText}>긴급 연락처를 준비하세요</Text>
-            </View>
-          </Card>
-        </View>
+            </Card>
+          </View>
 
-        {/* Action Button */}
-        <View style={styles.actionSection}>
-          {!isExerciseStarted ? (
-            <TouchableOpacity
-              style={[
-                styles.actionButton,
-                !selectedRoute && styles.disabledButton
-              ]}
-              onPress={startExercise}
-              disabled={!selectedRoute}
-            >
-              <Text style={styles.actionButtonText}>운동 시작</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.stopButton]}
-              onPress={stopExercise}
-            >
-              <Text style={styles.actionButtonText}>운동 종료</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </ScrollView>
+          {/* Route Selection */}
+          <View style={styles.routeSection}>
+            <Text style={styles.sectionTitle}>운동 경로 선택</Text>
+            <View style={styles.routeGrid}>
+              {routes.map((route) => (
+                <TouchableOpacity
+                  key={route.id}
+                  style={[
+                    styles.routeCard,
+                    selectedRoute === route.id && styles.selectedRouteCard
+                  ]}
+                  onPress={() => setSelectedRoute(route.id)}
+                >
+                  <View style={styles.routeHeader}>
+                    <View style={[styles.routeIcon, { backgroundColor: route.color + '20' }]}>
+                      <Text style={styles.routeIconText}>{route.icon}</Text>
+                    </View>
+                    <View style={styles.routeInfo}>
+                      <Text style={styles.routeName}>{route.name}</Text>
+                      <Text style={styles.routeDescription}>{route.description}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.routeMeta}>
+                    <View style={styles.metaItem}>
+                      <Text style={styles.metaLabel}>거리</Text>
+                      <Text style={styles.metaValue}>{route.distance}</Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <Text style={styles.metaLabel}>시간</Text>
+                      <Text style={styles.metaValue}>{route.duration}</Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <Text style={styles.metaLabel}>난이도</Text>
+                      <Text style={styles.metaValue}>{route.difficulty}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.routeFeatures}>
+                    {route.features.map((feature, index) => (
+                      <View key={index} style={styles.featureTag}>
+                        <Text style={styles.featureText}>{feature}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Safety Tips */}
+          <View style={styles.safetySection}>
+            <Text style={styles.sectionTitle}>안전 수칙</Text>
+            <Card style={styles.safetyCard}>
+              <View style={styles.safetyItem}>
+                <View style={styles.safetyIcon}>
+                  <Text style={styles.safetyIconText}>🚶‍♂️</Text>
+                </View>
+                <Text style={styles.safetyText}>보행자 도로를 이용하세요</Text>
+              </View>
+              <View style={styles.safetyItem}>
+                <View style={styles.safetyIcon}>
+                  <Text style={styles.safetyIconText}>👕</Text>
+                </View>
+                <Text style={styles.safetyText}>밝은 색의 옷을 입으세요</Text>
+              </View>
+              <View style={styles.safetyItem}>
+                <View style={styles.safetyIcon}>
+                  <Text style={styles.safetyIconText}>💧</Text>
+                </View>
+                <Text style={styles.safetyText}>충분한 수분을 섭취하세요</Text>
+              </View>
+              <View style={styles.safetyItem}>
+                <View style={styles.safetyIcon}>
+                  <Text style={styles.safetyIconText}>📱</Text>
+                </View>
+                <Text style={styles.safetyText}>긴급 연락처를 준비하세요</Text>
+              </View>
+            </Card>
+          </View>
+
+          {/* Action Button */}
+          <View style={styles.actionSection}>
+            {!isExerciseStarted && (
+              <TouchableOpacity
+                style={[
+                  styles.actionButton,
+                  !selectedRoute && styles.disabledButton
+                ]}
+                onPress={startExercise}
+                disabled={!selectedRoute || loading}
+              >
+                <Text style={styles.actionButtonText}>
+                  {loading ? '위치 확인 중...' : '운동 시작'}
+                </Text>
+                {loading && <ActivityIndicator size="small" color="#fff" style={{ marginLeft: 8 }} />}
+              </TouchableOpacity>
+            )}
+            {isExerciseStarted && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.stopButton]}
+                onPress={stopExercise}
+              >
+                <Text style={styles.actionButtonText}>운동 종료</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -589,4 +617,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OutdoorExerciseScreen; 
+export default OutdoorExerciseScreen;

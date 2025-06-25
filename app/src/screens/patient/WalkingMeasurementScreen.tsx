@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   Animated,
+  AppState,
+  AppStateStatus, // 타입 추가
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,10 +32,12 @@ const WalkingMeasurementScreen: React.FC = () => {
   const [pace, setPace] = useState(0);
   const [isPedometerAvailable, setIsPedometerAvailable] = useState<boolean | null>(null);
   const [pedometerError, setPedometerError] = useState<string | null>(null);
+  const [startTimestamp, setStartTimestamp] = useState<number | null>(null); // 추가
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pedometerSubscription = useRef<any>(null);
+  const appState = useRef<AppStateStatus>(AppState.currentState); // 타입 명시
 
   // 펄스 애니메이션
   const startPulseAnimation = () => {
@@ -60,15 +64,11 @@ const WalkingMeasurementScreen: React.FC = () => {
 
   // 타이머 시작
   const startTimer = () => {
+    const now = Date.now();
+    setStartTimestamp(now);
+    setElapsedTime(0);
     timerRef.current = setInterval(() => {
-      setElapsedTime(prev => {
-        const newTime = prev + 1;
-        // 페이스 계산 (분당 걸음 수)
-        if (steps > 0) {
-          setPace(Math.round((steps / newTime) * 60));
-        }
-        return newTime;
-      });
+      setElapsedTime(prev => prev + 1);
     }, 1000);
   };
 
@@ -78,6 +78,7 @@ const WalkingMeasurementScreen: React.FC = () => {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    setStartTimestamp(null);
   };
 
   // 센서 지원 여부 확인
@@ -129,6 +130,7 @@ const WalkingMeasurementScreen: React.FC = () => {
     setCalories(0);
     setElapsedTime(0);
     setPace(0);
+    setStartTimestamp(Date.now()); // 추가
     startTimer();
     subscribePedometer();
     startPulseAnimation();
@@ -191,6 +193,37 @@ const WalkingMeasurementScreen: React.FC = () => {
     };
   }, []);
 
+  // AppState로 백그라운드/포그라운드 감지 및 경과 시간 보정
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => { // 타입 명시
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active' &&
+        isWalking &&
+        startTimestamp
+      ) {
+        // 포그라운드 복귀 시 실제 경과 시간 보정
+        const now = Date.now();
+        const elapsed = Math.floor((now - startTimestamp) / 1000);
+        setElapsedTime(elapsed);
+      }
+      appState.current = nextAppState; // 타입 오류 해결
+    };
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      subscription.remove();
+    };
+  }, [isWalking, startTimestamp]);
+
+  // 페이스 계산: steps, elapsedTime이 바뀔 때마다 계산
+  useEffect(() => {
+    if (isWalking && elapsedTime > 0) {
+      setPace(Math.round((steps * 60) / elapsedTime));
+    } else {
+      setPace(0);
+    }
+  }, [steps, elapsedTime, isWalking]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -227,7 +260,7 @@ const WalkingMeasurementScreen: React.FC = () => {
         <Card style={styles.measurementCard}>
           {/* Walking Status */}
           <View style={styles.statusContainer}>
-            <Animated.View 
+            <Animated.View
               style={[
                 styles.walkingIndicator,
                 { transform: [{ scale: pulseAnim }] }
