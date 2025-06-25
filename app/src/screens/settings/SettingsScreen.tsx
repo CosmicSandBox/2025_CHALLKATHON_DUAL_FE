@@ -55,11 +55,18 @@ const SettingsScreen: React.FC = () => {
           icon: '🔒',
           type: 'navigate',
         },
+        // {
+        //   id: 'role',
+        //   title: '역할 설정',
+        //   subtitle: '환자 / 보호자 역할 변경',
+        //   icon: '🔄',
+        //   type: 'navigate',
+        // },
         {
-          id: 'role',
-          title: '역할 설정',
-          subtitle: '환자 / 보호자 역할 변경',
-          icon: '🔄',
+          id: 'caregiver',
+          title: '보호자 연동',
+          subtitle: '보호자와 연동하기',
+          icon: '🤝',
           type: 'navigate',
         },
       ],
@@ -76,13 +83,13 @@ const SettingsScreen: React.FC = () => {
           value: notifications,
           onValueChange: setNotifications,
         },
-        {
-          id: 'reminders',
-          title: '운동 알림',
-          subtitle: '정기적인 운동 알림',
-          icon: '⏰',
-          type: 'navigate',
-        },
+        // {
+        //   id: 'reminders',
+        //   title: '운동 알림',
+        //   subtitle: '정기적인 운동 알림',
+        //   icon: '⏰',
+        //   type: 'navigate',
+        // },
         {
           id: 'emergency',
           title: '긴급 알림',
@@ -95,15 +102,15 @@ const SettingsScreen: React.FC = () => {
     {
       title: '개인정보',
       items: [
-        {
-          id: 'location',
-          title: '위치 서비스',
-          subtitle: '실외 운동 시 위치 추적',
-          icon: '📍',
-          type: 'switch',
-          value: locationServices,
-          onValueChange: setLocationServices,
-        },
+        // {
+        //   id: 'location',
+        //   title: '위치 서비스',
+        //   subtitle: '실외 운동 시 위치 추적',
+        //   icon: '📍',
+        //   type: 'switch',
+        //   value: locationServices,
+        //   onValueChange: setLocationServices,
+        // },
         {
           id: 'health',
           title: '건강 데이터',
@@ -111,71 +118,23 @@ const SettingsScreen: React.FC = () => {
           icon: '❤️',
           type: 'navigate',
         },
-        {
-          id: 'privacy',
-          title: '개인정보 보호',
-          subtitle: '데이터 수집 및 사용',
-          icon: '🛡️',
-          type: 'navigate',
-        },
+        // {
+        //   id: 'privacy',
+        //   title: '개인정보 보호',
+        //   subtitle: '데이터 수집 및 사용',
+        //   icon: '🛡️',
+        //   type: 'navigate',
+        // },
       ],
     },
-    {
-      title: '앱 설정',
-      items: [
-        {
-          id: 'sync',
-          title: '자동 동기화',
-          subtitle: '데이터 자동 백업',
-          icon: '☁️',
-          type: 'switch',
-          value: autoSync,
-          onValueChange: setAutoSync,
-        },
-        {
-          id: 'theme',
-          title: '다크 모드',
-          subtitle: '어두운 테마 사용',
-          icon: '🌙',
-          type: 'switch',
-          value: darkMode,
-          onValueChange: setDarkMode,
-        },
-        {
-          id: 'language',
-          title: '언어 설정',
-          subtitle: '한국어',
-          icon: '🌐',
-          type: 'navigate',
-        },
-      ],
-    },
-    {
-      title: '지원',
-      items: [
-        {
-          id: 'help',
-          title: '도움말',
-          subtitle: '사용법 및 FAQ',
-          icon: '❓',
-          type: 'navigate',
-        },
-        {
-          id: 'contact',
-          title: '고객 지원',
-          subtitle: '문의 및 피드백',
-          icon: '💬',
-          type: 'navigate',
-        },
-        {
-          id: 'about',
-          title: '앱 정보',
-          subtitle: '버전 1.0.0',
-          icon: 'ℹ️',
-          type: 'navigate',
-        },
-      ],
-    },
+    // {
+    //   title: '앱 설정',
+    //   items: [ ... ],
+    // },
+    // {
+    //   title: '지원',
+    //   items: [ ... ],
+    // },
   ];
 
   const handleLogout = () => {
@@ -408,4 +367,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SettingsScreen; 
+export default SettingsScreen;

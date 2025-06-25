@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>커스텀 카카오 지도</title>
+    <style>
+      html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; }
+    </style>
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=4130719bf72a312a77503c40294d252d"></script>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      let map, userMarker, checkpointMarker, circle;
+      let checkpoint = { lat: 37.5665, lng: 126.9780, radius: 100 };
+
+      function initMap(lat, lng) {
+        map = new kakao.maps.Map(document.getElementById('map'), {
+          center: new kakao.maps.LatLng(lat, lng),
+          level: 3
+        });
+        userMarker = new kakao.maps.Marker({ position: new kakao.maps.LatLng(lat, lng), map });
+        checkpointMarker = new kakao.maps.Marker({
+          position: new kakao.maps.LatLng(checkpoint.lat, checkpoint.lng),
+          map,
+          image: new kakao.maps.MarkerImage('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png', new kakao.maps.Size(24, 35))
+        });
+        circle = new kakao.maps.Circle({
+          center: new kakao.maps.LatLng(checkpoint.lat, checkpoint.lng),
+          radius: checkpoint.radius,
+          strokeWeight: 2,
+          strokeColor: '#FF00FF',
+          strokeOpacity: 0.8,
+          fillColor: '#FF00FF',
+          fillOpacity: 0.2,
+          map
+        });
+      }
+
+      // React Native에서 postMessage로 위치/체크포인트/반경 등 전달받기
+      document.addEventListener('message', function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'location') {
+          const { lat, lng } = data;
+          if (!map) initMap(lat, lng);
+          else {
+            userMarker.setPosition(new kakao.maps.LatLng(lat, lng));
+            map.setCenter(new kakao.maps.LatLng(lat, lng));
+          }
+        }
+        if (data.type === 'checkpoint') {
+          checkpoint = data.checkpoint;
+          checkpointMarker.setPosition(new kakao.maps.LatLng(checkpoint.lat, checkpoint.lng));
+          circle.setCenter(new kakao.maps.LatLng(checkpoint.lat, checkpoint.lng));
+          circle.setRadius(checkpoint.radius);
+        }
+      });
+
+      // 체크포인트 도달 체크 (거리 계산)
+      function isInCheckpoint(userLat, userLng) {
+        const d = Math.sqrt(
+          Math.pow(userLat - checkpoint.lat, 2) + Math.pow(userLng - checkpoint.lng, 2)
+        );
+        return d * 111000 < checkpoint.radius;
+      }
+    </script>
+  </body>
+</html>
