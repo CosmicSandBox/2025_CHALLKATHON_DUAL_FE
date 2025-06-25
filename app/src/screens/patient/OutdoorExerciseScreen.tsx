@@ -434,7 +434,10 @@ const OutdoorExerciseScreen: React.FC = () => {
     <html>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
         <title>카카오 맵 운동 게임</title>
         <style>
             body, html {
@@ -514,7 +517,10 @@ const OutdoorExerciseScreen: React.FC = () => {
             // 카카오 맵 API 로드
             function loadKakaoMapAPI() {
                 return new Promise((resolve, reject) => {
+                    console.log('카카오 맵 API 로드 시도...');
+                    
                     if (window.kakao && window.kakao.maps) {
+                        console.log('카카오 맵 API 이미 로드됨');
                         resolve();
                         return;
                     }
@@ -522,17 +528,26 @@ const OutdoorExerciseScreen: React.FC = () => {
                     const script = document.createElement('script');
                     script.type = 'text/javascript';
                     script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=4130719bf72a312a77503c40294d252d&libraries=services&autoload=false';
+                    
                     script.onload = () => {
+                        console.log('카카오 맵 스크립트 로드 완료, 초기화 중...');
                         kakao.maps.load(() => {
                             console.log('카카오 맵 API 로드 완료');
                             resolve();
                         });
                     };
+                    
                     script.onerror = (error) => {
                         console.error('카카오 맵 API 로드 실패:', error);
+                        sendMessageToApp({
+                            type: 'error',
+                            message: '카카오 맵 스크립트 로드 실패'
+                        });
                         reject(error);
                     };
+                    
                     document.head.appendChild(script);
+                    console.log('카카오 맵 스크립트 추가됨');
                 });
             }
             
@@ -871,6 +886,7 @@ const OutdoorExerciseScreen: React.FC = () => {
                     
                     switch(data.type) {
                         case 'init_map':
+                            console.log('지도 초기화 요청 받음:', data.lat, data.lng);
                             initializeMap(data.lat, data.lng);
                             break;
                             
@@ -879,12 +895,17 @@ const OutdoorExerciseScreen: React.FC = () => {
                             break;
                             
                         case 'set_max_distance':
+                            console.log('최대 거리 설정:', data.maxDistance);
                             gameState.maxDistance = data.maxDistance;
                             break;
                             
                         case 'reset_game':
+                            console.log('게임 상태 리셋');
                             resetGameState();
                             break;
+                            
+                        default:
+                            console.log('알 수 없는 메시지 타입:', data.type);
                     }
                 } catch (error) {
                     console.error('React Native 메시지 파싱 오류:', error);
@@ -928,6 +949,106 @@ const todayStats = {
     humidity: 65,
     windSpeed: 3,
   };
+
+  // 컴포넌트 마운트 시 권한 체크
+  useEffect(() => {
+    const checkLocationPermission = async () => {
+      try {
+        console.log('위치 권한 상태를 확인합니다...');
+        const { status } = await Location.getForegroundPermissionsAsync();
+        console.log('현재 위치 권한 상태:', status);
+        
+        if (status !== 'granted') {
+          console.log('위치 권한이 없습니다. 사용자에게 안내합니다.');
+          // 권한이 없으면 사용자에게 안내만 하고, 실제 요청은 운동 시작 시에 수행
+        }
+      } catch (error) {
+        console.error('권한 확인 중 오류:', error);
+      }
+    };
+    
+    checkLocationPermission();
+  }, []);
+
+  // 운동이 시작되고 WebView가 준비되면 지도 초기화
+  useEffect(() => {
+    const initializeMapIfReady = async () => {
+      console.log('useEffect 실행 - 상태 확인:', {
+        isExerciseStarted,
+        mapReady,
+        webViewRefExists: !!webViewRef.current
+      });
+      
+      if (isExerciseStarted && mapReady && webViewRef.current) {
+        try {
+          console.log('운동 시작 상태이고 WebView가 준비되어 지도를 초기화합니다');
+          
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.BestForNavigation,
+          });
+          
+          console.log('지도 초기화용 위치 가져오기 완료:', location.coords);
+          
+          console.log('WebView에 지도 초기화 메시지 전송 시도...');
+          
+          // WebView가 완전히 준비될 때까지 잠시 대기
+          setTimeout(() => {
+            if (webViewRef.current) {
+              
+              // injectedJavaScript를 사용한 안정적인 메시지 전송
+              const initMapScript = `
+                try {
+                  console.log('injectedJavaScript로 지도 초기화 시작');
+                  initializeMap(${location.coords.latitude}, ${location.coords.longitude});
+                  
+                  // 최대 거리도 설정
+                  if (typeof gameState !== 'undefined') {
+                    gameState.maxDistance = ${maxDistance};
+                    console.log('최대 거리 설정 완료:', ${maxDistance});
+                  }
+                } catch (error) {
+                  console.error('injectedJavaScript 실행 오류:', error);
+                }
+                true; // injectedJavaScript는 반드시 true를 반환해야 함
+              `;
+              
+              webViewRef.current.injectJavaScript(initMapScript);
+              console.log('injectedJavaScript로 지도 초기화 명령 전송 완료');
+              
+              // 기존 postMessage도 백업으로 유지
+              webViewRef.current.postMessage(JSON.stringify({
+                type: 'init_map',
+                lat: location.coords.latitude,
+                lng: location.coords.longitude
+              }));
+              
+              console.log('postMessage로 지도 초기화 메시지 전송 완료');
+              
+              webViewRef.current.postMessage(JSON.stringify({
+                type: 'set_max_distance',
+                maxDistance: maxDistance
+              }));
+              
+              console.log('최대 거리 설정 메시지 전송 완료');
+            } else {
+              console.error('WebView ref가 null입니다!');
+            }
+          }, 100); // 100ms 지연
+          
+        } catch (error) {
+          console.error('지도 초기화용 위치 가져오기 실패:', error);
+        }
+      } else {
+        console.log('지도 초기화 조건 미충족:', {
+          isExerciseStarted,
+          mapReady,
+          webViewRefExists: !!webViewRef.current
+        });
+      }
+    };
+    
+    initializeMapIfReady();
+  }, [isExerciseStarted, mapReady, maxDistance]); // 운동 시작, WebView 준비, 최대거리 변경 시 실행
 
   // 컴포넌트 언마운트 시 위치 추적 정리
   useEffect(() => {
@@ -1002,35 +1123,40 @@ const todayStats = {
   const startExercise = async () => {
     setLoading(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      // 먼저 현재 권한 상태 확인
+      let { status } = await Location.getForegroundPermissionsAsync();
+      
       if (status !== 'granted') {
-        Alert.alert('위치 권한 필요', '위치 권한을 허용해주세요.');
+        console.log('권한이 없습니다. 요청합니다...');
+        // 권한 요청
+        const result = await Location.requestForegroundPermissionsAsync();
+        status = result.status;
+        console.log('권한 요청 결과:', status);
+      }
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          '위치 권한 필요', 
+          '운동 경로 추적을 위해 위치 권한이 필요합니다. 설정에서 위치 권한을 허용해주세요.',
+          [
+            { text: '취소', style: 'cancel' },
+            { text: '설정으로 이동', onPress: () => {
+              // 설정 앱으로 이동하는 로직이 필요할 수 있습니다
+              console.log('설정으로 이동');
+            }}
+          ]
+        );
         setLoading(false);
         return;
       }
       
+      console.log('위치 권한이 허용되었습니다. 현재 위치를 가져옵니다...');
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.BestForNavigation,
       });
       
       console.log('Current location:', location.coords);
-      setIsExerciseStarted(true);
-      
-      // 지도 초기화를 위해 위치 전송
-      setTimeout(() => {
-        if (webViewRef.current) {
-          webViewRef.current.postMessage(JSON.stringify({
-            type: 'init_map',
-            lat: location.coords.latitude,
-            lng: location.coords.longitude
-          }));
-          
-          webViewRef.current.postMessage(JSON.stringify({
-            type: 'set_max_distance',
-            maxDistance: maxDistance
-          }));
-        }
-      }, 1000);
+      setIsExerciseStarted(true); // 이것이 useEffect를 트리거하여 지도 초기화
       
       // 실시간 위치 추적 시작
       startLocationTracking();
@@ -1084,8 +1210,8 @@ const todayStats = {
       
       switch (data.type) {
         case 'map_ready':
-          setMapReady(true);
           console.log('카카오 맵 WebView가 준비되었습니다');
+          setMapReady(true); // 이것이 useEffect를 트리거함
           break;
           
         case 'dom_ready':
@@ -1172,7 +1298,7 @@ const todayStats = {
               ref={webViewRef}
               source={{
                 html: mapHtml,
-                baseUrl: 'https://app.example.com',
+                baseUrl: 'https://dapi.kakao.com',
               }}
               style={styles.webView}
               javaScriptEnabled={true}
@@ -1185,6 +1311,21 @@ const todayStats = {
               originWhitelist={['*']}
               allowsFullscreenVideo={true}
               startInLoadingState={true}
+              allowFileAccess={true}
+              allowFileAccessFromFileURLs={true}
+              allowUniversalAccessFromFileURLs={true}
+              onShouldStartLoadWithRequest={() => true}
+              thirdPartyCookiesEnabled={true}
+              sharedCookiesEnabled={true}
+              cacheEnabled={true}
+              userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
+              webviewDebuggingEnabled={__DEV__}
+              onLoadStart={() => {
+                console.log('WebView 로딩 시작');
+              }}
+              onLoadEnd={() => {
+                console.log('WebView 로딩 완료');
+              }}
               renderLoading={() => (
                 <View style={styles.webViewLoading}>
                   <ActivityIndicator size="large" color={Colors.primary} />

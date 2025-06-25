@@ -13,7 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "이 앱은 운동 경로 추적을 위해 위치 정보를 사용합니다.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "이 앱은 운동 경로 추적을 위해 위치 정보를 사용합니다."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,8 +25,19 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.dual.app"
+      "package": "com.dual.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_WIFI_STATE"
+      ],
+      "usesCleartextTraffic": true
     },
+    "permissions": [
+      "LOCATION"
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     },
@@ -30,6 +45,14 @@
       "eas": {
         "projectId": "fc34768e-2bec-4c1f-836b-ea2d6894c508"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "이 앱은 운동 경로 추적을 위해 위치 정보를 사용합니다."
+        }
+      ]
+    ]
   }
 }
