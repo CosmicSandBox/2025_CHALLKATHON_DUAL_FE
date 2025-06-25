@@ -384,6 +384,7 @@ const WalkingMeasurementScreen: React.FC = () => {
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerTitle}>걸음 수 측정</Text>
           <Text style={styles.headerSubtitle}>실내에서 안전하게 걷기 운동을 시작해보세요</Text>
+          <Text style={styles.updateIndicator}>📱 OTA 업데이트 적용됨 v1.1</Text>
         </View>
       </View>
 
@@ -525,6 +526,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#A3A8AF',
     fontWeight: '400',
+  },
+  updateIndicator: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: '600',
+    marginTop: 4,
   },
   measurementSection: {
     paddingHorizontal: Spacing.paddingLarge,
