@@ -652,44 +652,82 @@ const OutdoorExerciseScreen: React.FC = () => {
             function createUserMarker(lat, lng) {
                 const userIcon = createCustomMarkerIcon('user');
                 
-                userMarker = new kakao.maps.Marker({
-                    position: new kakao.maps.LatLng(lat, lng),
-                    map: map,
-                    image: userIcon
-                });
+                // 아이콘 생성에 실패한 경우 기본 마커 사용
+                if (userIcon) {
+                    userMarker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng(lat, lng),
+                        map: map,
+                        image: userIcon
+                    });
+                } else {
+                    // 기본 마커 사용
+                    userMarker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng(lat, lng),
+                        map: map
+                    });
+                }
                 
                 map.setCenter(new kakao.maps.LatLng(lat, lng));
             }
             
+            // UTF-8 안전 Base64 인코딩 함수
+            function utf8ToBase64(str) {
+                try {
+                    // 더 안전한 방법: TextEncoder 사용
+                    if (typeof TextEncoder !== 'undefined') {
+                        const encoder = new TextEncoder();
+                        const data = encoder.encode(str);
+                        let binary = '';
+                        for (let i = 0; i < data.length; i++) {
+                            binary += String.fromCharCode(data[i]);
+                        }
+                        return btoa(binary);
+                    } else {
+                        // 폴백: 기존 방법
+                        return btoa(unescape(encodeURIComponent(str)));
+                    }
+                } catch (error) {
+                    console.error('Base64 인코딩 오류:', error);
+                    // 최종 폴백: 간단한 SVG 반환
+                    return btoa('<svg width="32" height="32"><circle cx="16" cy="16" r="10" fill="blue"/></svg>');
+                }
+            }
+            
             // 커스텀 마커 아이콘 생성
             function createCustomMarkerIcon(type) {
-                let svgContent;
-                let size;
-                
-                if (type === 'user') {
-                    svgContent = \`
-                        <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="16" cy="16" r="14" fill="#2196F3" stroke="white" stroke-width="3"/>
-                            <circle cx="16" cy="16" r="6" fill="white"/>
-                            <circle cx="16" cy="16" r="3" fill="#1976D2"/>
-                        </svg>
-                    \`;
-                    size = new kakao.maps.Size(32, 32);
-                } else if (type === 'checkpoint') {
-                    svgContent = \`
-                        <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="24" cy="24" r="20" fill="#FFD700" stroke="#FF8C00" stroke-width="4"/>
-                            <circle cx="24" cy="24" r="12" fill="#FFA000"/>
-                            <text x="24" y="30" text-anchor="middle" font-size="20" fill="white" font-weight="bold">★</text>
-                        </svg>
-                    \`;
-                    size = new kakao.maps.Size(48, 48);
+                try {
+                    let svgContent;
+                    let size;
+                    
+                    if (type === 'user') {
+                        svgContent = \`
+                            <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="16" cy="16" r="14" fill="#2196F3" stroke="white" stroke-width="3"/>
+                                <circle cx="16" cy="16" r="6" fill="white"/>
+                                <circle cx="16" cy="16" r="3" fill="#1976D2"/>
+                            </svg>
+                        \`;
+                        size = new kakao.maps.Size(32, 32);
+                    } else if (type === 'checkpoint') {
+                        svgContent = \`
+                            <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="24" cy="24" r="20" fill="#FFD700" stroke="#FF8C00" stroke-width="4"/>
+                                <circle cx="24" cy="24" r="12" fill="#FFA000"/>
+                                <polygon points="24,8 28,20 40,20 30,28 34,40 24,32 14,40 18,28 8,20 20,20" fill="white"/>
+                            </svg>
+                        \`;
+                        size = new kakao.maps.Size(48, 48);
+                    }
+                    
+                    const imageUrl = 'data:image/svg+xml;base64,' + utf8ToBase64(svgContent);
+                    return new kakao.maps.MarkerImage(imageUrl, size, {
+                        offset: new kakao.maps.Point(size.width/2, size.height/2)
+                    });
+                } catch (error) {
+                    console.error('마커 아이콘 생성 오류:', error);
+                    // 완전히 안전한 폴백: null 대신 undefined 반환
+                    return undefined;
                 }
-                
-                const imageUrl = 'data:image/svg+xml;base64,' + btoa(svgContent);
-                return new kakao.maps.MarkerImage(imageUrl, size, {
-                    offset: new kakao.maps.Point(size.width/2, size.height/2)
-                });
             }
             
             // 랜덤 체크포인트 생성
@@ -717,11 +755,21 @@ const OutdoorExerciseScreen: React.FC = () => {
                 };
                 
                 const checkpointIcon = createCustomMarkerIcon('checkpoint');
-                checkpointMarker = new kakao.maps.Marker({
-                    position: new kakao.maps.LatLng(checkpointLat, checkpointLng),
-                    map: map,
-                    image: checkpointIcon
-                });
+                
+                // 아이콘 생성에 실패한 경우 기본 마커 사용
+                if (checkpointIcon) {
+                    checkpointMarker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng(checkpointLat, checkpointLng),
+                        map: map,
+                        image: checkpointIcon
+                    });
+                } else {
+                    // 기본 마커 사용
+                    checkpointMarker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng(checkpointLat, checkpointLng),
+                        map: map
+                    });
+                }
                 
                 checkpointCircle = new kakao.maps.Circle({
                     center: new kakao.maps.LatLng(checkpointLat, checkpointLng),
