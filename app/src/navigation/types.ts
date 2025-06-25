@@ -48,6 +48,7 @@ export type IndoorStackParamList = {
   SittingMeasurement: undefined;
   BalanceMeasurement: undefined;
   WalkingSupportMeasurement: undefined;
+  HealthCheck: { exerciseName: string; exerciseType: string };
 };
 
 export type OutdoorStackParamList = {

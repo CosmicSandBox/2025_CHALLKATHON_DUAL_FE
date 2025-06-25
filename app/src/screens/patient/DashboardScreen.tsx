@@ -26,7 +26,6 @@ const DashboardScreen: React.FC = () => {
     steps: 3247,
     exerciseTime: 45,
     averagePain: 3,
-    calories: 156,
     distance: 2.1,
   };
 
@@ -40,30 +39,7 @@ const DashboardScreen: React.FC = () => {
     { day: '일', steps: 3247, pain: 3 },
   ];
 
-  const recentActivities = [
-    {
-      id: '1',
-      type: 'outdoor',
-      title: '실외 운동 완료',
-      time: '오후 3:30',
-      value: '2.5km',
-      duration: '45분',
-    },
-    {
-      id: '2',
-      type: 'pain',
-      title: '통증 기록',
-      time: '오후 2:15',
-      value: '3/10',
-    },
-    {
-      id: '3',
-      type: 'indoor',
-      title: '실내 운동 시작',
-      time: '오전 10:00',
-      value: '45분',
-    },
-  ];
+
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -139,22 +115,22 @@ const DashboardScreen: React.FC = () => {
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryValue}>{todayStats.averagePain}/10</Text>
-                <Text style={styles.summaryLabel}>통증</Text>
+                <Text style={styles.summaryValue}>{todayStats.distance}km</Text>
+                <Text style={styles.summaryLabel}>거리</Text>
               </View>
             </View>
-            <View style={styles.summaryFooter}>
-              <View style={styles.summaryFooterItem}>
-                <Text style={styles.summaryFooterLabel}>소모 칼로리</Text>
-                <Text style={styles.summaryFooterValue}>
-                  {todayStats.calories}kcal
-                </Text>
+          </Card>
+          
+          {/* Pain Status Card */}
+          <Card style={styles.painCard}>
+            <View style={styles.painContent}>
+              <View style={styles.painInfo}>
+                <Text style={styles.painTitle}>오늘의 통증 수준</Text>
+                <Text style={styles.painSubtitle}>낮을수록 좋아요</Text>
               </View>
-              <View style={styles.summaryFooterItem}>
-                <Text style={styles.summaryFooterLabel}>이동 거리</Text>
-                <Text style={styles.summaryFooterValue}>
-                  {todayStats.distance}km
-                </Text>
+              <View style={styles.painValueContainer}>
+                <Text style={styles.painValue}>{todayStats.averagePain}</Text>
+                <Text style={styles.painMaxValue}>/10</Text>
               </View>
             </View>
           </Card>
@@ -258,52 +234,6 @@ const DashboardScreen: React.FC = () => {
             </View>
           </Card>
         </View>
-
-        {/* Recent Activity */}
-        <View style={styles.activitySection}>
-          <Text style={styles.sectionTitle}>최근 활동</Text>
-          <Card style={styles.activityCard}>
-            {recentActivities.map((activity, index) => (
-              <View
-                key={activity.id}
-                style={[
-                  styles.activityItem,
-                  index === recentActivities.length - 1 &&
-                    styles.activityItemLast,
-                ]}
-              >
-                <View
-                  style={[
-                    styles.activityIcon,
-                    activity.type === 'indoor' && styles.activityIconIndoor,
-                    activity.type === 'outdoor' && styles.activityIconOutdoor,
-                    activity.type === 'pain' && styles.activityIconPain,
-                  ]}
-                >
-                  <Text style={styles.activityIconText}>
-                    {activity.type === 'indoor'
-                      ? '🏠'
-                      : activity.type === 'outdoor'
-                      ? '🌳'
-                      : '📊'}
-                  </Text>
-                </View>
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>{activity.title}</Text>
-                  <Text style={styles.activityTime}>{activity.time}</Text>
-                </View>
-                <View style={styles.activityValueContainer}>
-                  <Text style={styles.activityValue}>{activity.value}</Text>
-                  {activity.duration && (
-                    <Text style={styles.activityDuration}>
-                      {activity.duration}
-                    </Text>
-                  )}
-                </View>
-              </View>
-            ))}
-          </Card>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -401,11 +331,50 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     padding: Spacing.padding,
+    marginBottom: Spacing.componentSpacing,
+  },
+  painCard: {
+    padding: Spacing.padding,
+    backgroundColor: '#FEF7F0',
+    borderWidth: 1,
+    borderColor: '#F97316',
+  },
+  painContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  painInfo: {
+    flex: 1,
+  },
+  painTitle: {
+    ...Typography.body,
+    color: Colors.textPrimary,
+    fontWeight: '600',
+    marginBottom: Spacing.xs,
+  },
+  painSubtitle: {
+    ...Typography.caption,
+    color: Colors.textLight,
+  },
+  painValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  painValue: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#F97316',
+  },
+  painMaxValue: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#F97316',
+    opacity: 0.7,
   },
   summaryGrid: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.componentSpacing,
   },
   summaryItem: {
     flex: 1,
@@ -428,7 +397,7 @@ const styles = StyleSheet.create({
   },
   summaryFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
     paddingTop: Spacing.componentSpacing,
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
@@ -582,69 +551,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: Colors.textPrimary,
     fontSize: 10,
-  },
-  activitySection: {
-    paddingHorizontal: Spacing.paddingLarge,
-  },
-  activityCard: {
-    padding: 0,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.componentSpacing,
-    paddingHorizontal: Spacing.padding,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  activityItemLast: {
-    borderBottomWidth: 0,
-  },
-  activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.componentSpacing,
-  },
-  activityIconIndoor: {
-    backgroundColor: '#E8F5E8',
-  },
-  activityIconOutdoor: {
-    backgroundColor: '#E3F2FD',
-  },
-  activityIconPain: {
-    backgroundColor: '#FFF3E0',
-  },
-  activityIconText: {
-    fontSize: 18,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityTitle: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    fontWeight: '500',
-    marginBottom: Spacing.xs,
-  },
-  activityTime: {
-    ...Typography.caption,
-    color: Colors.textLight,
-  },
-  activityValueContainer: {
-    alignItems: 'flex-end',
-  },
-  activityValue: {
-    ...Typography.body,
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  activityDuration: {
-    ...Typography.caption,
-    color: Colors.textLight,
-    marginTop: Spacing.xs,
   },
 });
 

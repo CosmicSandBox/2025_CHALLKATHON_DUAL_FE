@@ -9,11 +9,27 @@ import {
   Alert,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { logout } from '../store/slices/authSlice';
+import { signOut } from '../store/slices/authSlice';
 import Card from '../components/common/Card';
 import { Colors } from '../constants/colors';
 import { Typography } from '../constants/typography';
 import { Spacing } from '../constants/spacing';
+
+// 메인페이지 초록색 테마
+const AppColors = {
+  primary: '#4CAF50',      // 메인 초록색
+  primaryLight: '#E8F5E8', // 연한 초록 배경
+  success: '#10B981',      // 상태 표시용 초록색
+};
+
+interface SettingItem {
+  title: string;
+  subtitle: string;
+  icon: string;
+  onPress?: () => void;
+  isExerciseRelated?: boolean;
+  isEnabled?: boolean;
+}
 
 const SettingsScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -30,7 +46,7 @@ const SettingsScreen: React.FC = () => {
         {
           text: '로그아웃',
           style: 'destructive',
-          onPress: () => dispatch(logout()),
+          onPress: () => dispatch(signOut()),
         },
       ]
     );
@@ -43,21 +59,39 @@ const SettingsScreen: React.FC = () => {
         { title: '이름 변경', subtitle: '홍길동', icon: '👤' },
         { title: '프로필 사진', subtitle: '변경', icon: '📷' },
         { title: '연락처', subtitle: '010-1234-5678', icon: '📞' },
-      ],
+      ] as SettingItem[],
     },
     {
       title: '알림',
       items: [
-        { title: '운동 미시작 알림', subtitle: '켜짐', icon: '🔔' },
-        { title: '알림 시간', subtitle: '오전 9시', icon: '⏰' },
-      ],
+        { 
+          title: '운동 알림', 
+          subtitle: '켜짐', 
+          icon: '🔔', 
+          isExerciseRelated: true,
+          isEnabled: true 
+        },
+        { 
+          title: '알림 시간', 
+          subtitle: '오전 9시', 
+          icon: '⏰',
+          isExerciseRelated: true 
+        },
+        { 
+          title: '동기부여 메시지', 
+          subtitle: '켜짐', 
+          icon: '💪',
+          isExerciseRelated: true,
+          isEnabled: true 
+        },
+      ] as SettingItem[],
     },
     {
       title: '동기화',
       items: [
         { title: '자동 동기화', subtitle: '켜짐', icon: '🔄' },
         { title: '마지막 동기화', subtitle: '방금 전', icon: '📱' },
-      ],
+      ] as SettingItem[],
     },
     {
       title: '기타',
@@ -65,7 +99,7 @@ const SettingsScreen: React.FC = () => {
         { title: '언어', subtitle: '한국어', icon: '🌐' },
         { title: '비밀번호 변경', subtitle: '', icon: '🔒' },
         { title: '로그아웃', subtitle: '', icon: '🚪', onPress: handleLogout },
-      ],
+      ] as SettingItem[],
     },
   ];
 
@@ -91,23 +125,44 @@ const SettingsScreen: React.FC = () => {
                     key={itemIndex}
                     style={[
                       styles.settingItem,
-                      itemIndex < section.items.length - 1 && styles.settingItemBorder
+                      itemIndex < section.items.length - 1 && styles.settingItemBorder,
+                      item.isExerciseRelated && styles.exerciseNotificationItem
                     ]}
                     onPress={item.onPress}
                     disabled={!item.onPress}
                   >
                     <View style={styles.settingItemLeft}>
-                      <Text style={styles.settingIcon}>{item.icon}</Text>
+                      <View style={[
+                        styles.iconContainer,
+                        item.isExerciseRelated && styles.exerciseIconContainer
+                      ]}>
+                        <Text style={styles.settingIcon}>{item.icon}</Text>
+                      </View>
                       <View style={styles.settingContent}>
-                        <Text style={styles.settingTitle}>{item.title}</Text>
+                        <Text style={[
+                          styles.settingTitle,
+                          item.isExerciseRelated && styles.exerciseTitle
+                        ]}>
+                          {item.title}
+                        </Text>
                         {item.subtitle && (
-                          <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
+                          <Text style={[
+                            styles.settingSubtitle,
+                            item.isExerciseRelated && item.isEnabled && styles.exerciseEnabledSubtitle
+                          ]}>
+                            {item.subtitle}
+                          </Text>
                         )}
                       </View>
                     </View>
-                    {item.onPress && (
-                      <Text style={styles.settingArrow}>›</Text>
-                    )}
+                    <View style={styles.rightContainer}>
+                      {item.onPress && (
+                        <Text style={styles.settingArrow}>›</Text>
+                      )}
+                      {item.isExerciseRelated && item.isEnabled && (
+                        <View style={styles.enabledIndicator} />
+                      )}
+                    </View>
                   </TouchableOpacity>
                 ))}
               </Card>
@@ -168,14 +223,28 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
+  exerciseNotificationItem: {
+    backgroundColor: AppColors.primaryLight + '60', // 연한 초록 배경
+  },
   settingItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.componentSpacing,
+  },
+  exerciseIconContainer: {
+    backgroundColor: AppColors.primaryLight,
+  },
   settingIcon: {
     fontSize: 20,
-    marginRight: Spacing.componentSpacing,
   },
   settingContent: {
     flex: 1,
@@ -185,14 +254,33 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontWeight: '500',
   },
+  exerciseTitle: {
+    color: AppColors.primary,
+    fontWeight: '600',
+  },
   settingSubtitle: {
     ...Typography.bodySmall,
     color: Colors.textLight,
     marginTop: Spacing.xs,
   },
+  exerciseEnabledSubtitle: {
+    color: AppColors.success,
+    fontWeight: '500',
+  },
+  rightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   settingArrow: {
     ...Typography.h2,
     color: Colors.textLight,
+  },
+  enabledIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: AppColors.success,
+    marginLeft: 8,
   },
   appInfo: {
     alignItems: 'center',
@@ -211,4 +299,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SettingsScreen; 
+export default SettingsScreen;
