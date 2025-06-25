@@ -10,19 +10,6 @@ import { store } from './src/store';
 import RootNavigator from './src/navigation/RootNavigator';
 import { Colors } from './src/constants/colors';
 
-// 딥링크 설정
-const linking = {
-  prefixes: [Linking.createURL('/'), 'dualapp://'],
-  config: {
-    screens: {
-      Auth: 'auth',
-      Main: 'main', 
-      Caregiver: 'caregiver',
-      OnboardingNavigator: 'onboarding',
-    },
-  },
-} as const;
-
 export default function App() {
   useEffect(() => {
     // 앱이 실행될 때 딥링크 처리
@@ -73,7 +60,7 @@ export default function App() {
       <Provider store={store}>
         <SafeAreaView style={styles.container}>
           <StatusBar style="dark" />
-          <NavigationContainer linking={linking}>
+          <NavigationContainer>
             <RootNavigator />
           </NavigationContainer>
         </SafeAreaView>
