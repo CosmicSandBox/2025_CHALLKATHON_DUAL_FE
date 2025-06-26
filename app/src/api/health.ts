@@ -1,61 +1,62 @@
 import { get, post } from './client';
+import { API_ENDPOINTS, PainRecord, PainHistory, PainHistoryParams } from './config';
 
-export interface HealthRecordRequest {
-  chestPainScore: number; // 1-3점
-  backPainScore: number; // 1-3점
-  waistPainScore: number; // 1-3점
-  neckPainScore: number; // 1-3점
-  legPainScore: number; // 1-3점
-  overallCondition: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
-  notes?: string;
-}
-
-export interface HealthRecord {
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string;
-  recordId: string;
-  user: {
-    createdAt: string;
-    updatedAt: string;
-    deletedAt?: string;
-    uid: string;
-    username: string;
-    email: string;
-    provider: string;
-    role: string;
-    nickname: string;
-    profileImage: string;
-    isDeleted: boolean;
-    info: {
-      uid: string;
-      username: string;
-      nickname: string;
-    };
-  };
-  recordDate: string;
-  chestPainScore: number;
-  backPainScore: number;
-  waistPainScore: number;
-  neckPainScore: number;
-  legPainScore: number;
-  overallCondition: string;
-  notes: string;
-}
-
-export interface HealthRecordsResponse {
-  data: HealthRecord[];
-  message: string;
-  status: string;
-  action: string;
-}
-
-// 건강 기록 저장
-export const saveHealthRecord = async (data: HealthRecordRequest) => {
-  return post('/api/v1/health/record', data);
+// 수동 통증 기록
+export const recordPainManual = async (painRecord: PainRecord): Promise<string> => {
+  try {
+    const response = await post<string>(API_ENDPOINTS.HEALTH.PAIN_RECORD, painRecord);
+    
+    if (response.status === 'SUCCESS' && response.data) {
+      return response.data;
+    } else {
+      throw new Error('Failed to record manual pain');
+    }
+  } catch (error) {
+    console.error('Error recording manual pain:', error);
+    throw error;
+  }
 };
 
-// 최근 건강 기록 조회
-export const getRecentHealthRecords = async () => {
-  return get<HealthRecordsResponse>('/api/v1/health/records/recent');
+// 운동 후 통증 기록
+export const recordPainAfterExercise = async (painRecord: PainRecord): Promise<string> => {
+  try {
+    const response = await post<string>(API_ENDPOINTS.HEALTH.PAIN_RECORD_AFTER_EXERCISE, painRecord);
+    
+    if (response.status === 'SUCCESS' && response.data) {
+      return response.data;
+    } else {
+      throw new Error('Failed to record pain after exercise');
+    }
+  } catch (error) {
+    console.error('Error recording pain after exercise:', error);
+    throw error;
+  }
+};
+
+// 통증 기록 히스토리
+export const getPainHistory = async (params: PainHistoryParams = {}): Promise<PainHistory> => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (params.startDate) {
+      queryParams.append('startDate', params.startDate);
+    }
+    if (params.endDate) {
+      queryParams.append('endDate', params.endDate);
+    }
+    
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `${API_ENDPOINTS.HEALTH.PAIN_HISTORY}?${queryString}` : API_ENDPOINTS.HEALTH.PAIN_HISTORY;
+    
+    const response = await get<PainHistory>(endpoint);
+    
+    if (response.status === 'SUCCESS' && response.data) {
+      return response.data;
+    } else {
+      throw new Error('Failed to get pain history');
+    }
+  } catch (error) {
+    console.error('Error getting pain history:', error);
+    throw error;
+  }
 };

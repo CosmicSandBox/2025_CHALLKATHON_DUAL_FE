@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { IndoorExerciseStatus, getIndoorExerciseStatus } from '../api';
+import { Exercise, getExerciseList } from '../api';
 
-export const useIndoorExercises = () => {
-  const [exerciseData, setExerciseData] = useState<IndoorExerciseStatus | null>(null);
+export const useExerciseList = () => {
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -10,12 +10,12 @@ export const useIndoorExercises = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getIndoorExerciseStatus();
-      setExerciseData(data);
+      const data = await getExerciseList();
+      setExercises(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '실내운동 현황을 불러오는데 실패했습니다.';
+      const errorMessage = err instanceof Error ? err.message : '운동 목록을 불러오는데 실패했습니다.';
       setError(errorMessage);
-      console.error('실내운동 현황 로딩 오류:', err);
+      console.error('운동 목록 로딩 오류:', err);
     } finally {
       setLoading(false);
     }
@@ -30,7 +30,7 @@ export const useIndoorExercises = () => {
   }, []);
 
   return {
-    exerciseData,
+    exercises,
     loading,
     error,
     refreshExercises,

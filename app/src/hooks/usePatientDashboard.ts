@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PatientDashboard, getPatientDashboard } from '../api/dashboard';
+import { PatientDashboard, getPatientDashboard } from '../api';
 
 export const usePatientDashboard = () => {
   const [dashboardData, setDashboardData] = useState<PatientDashboard | null>(null);
@@ -10,13 +10,8 @@ export const usePatientDashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getPatientDashboard();
-      
-      if (response.status === 'SUCCESS' && response.data) {
-        setDashboardData(response.data);
-      } else {
-        throw new Error(response.message || '대시보드 데이터를 불러오는데 실패했습니다.');
-      }
+      const data = await getPatientDashboard();
+      setDashboardData(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '대시보드 데이터를 불러오는데 실패했습니다.';
       setError(errorMessage);

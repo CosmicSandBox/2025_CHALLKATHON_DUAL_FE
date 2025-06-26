@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
-import { ExerciseRecord, getExerciseRecords } from '../api/exercise';
+import { ExerciseHistory, getExerciseHistory } from '../api';
 
-export const useExerciseRecords = (startDate?: string, endDate?: string) => {
-  const [records, setRecords] = useState<ExerciseRecord[]>([]);
+export const useExerciseRecords = (params?: {
+  exerciseType?: 'INDOOR' | 'OUTDOOR';
+  startDate?: string;
+  endDate?: string;
+}) => {
+  const [exerciseHistory, setExerciseHistory] = useState<ExerciseHistory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -10,13 +14,8 @@ export const useExerciseRecords = (startDate?: string, endDate?: string) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getExerciseRecords(startDate, endDate);
-      
-      if (response.status === 'SUCCESS' && response.data) {
-        setRecords(response.data);
-      } else {
-        throw new Error(response.message || '운동 기록을 불러오는데 실패했습니다.');
-      }
+      const data = await getExerciseHistory(params || {});
+      setExerciseHistory(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '운동 기록을 불러오는데 실패했습니다.';
       setError(errorMessage);
@@ -32,10 +31,10 @@ export const useExerciseRecords = (startDate?: string, endDate?: string) => {
 
   useEffect(() => {
     loadRecords();
-  }, [startDate, endDate]);
+  }, [params?.exerciseType, params?.startDate, params?.endDate]);
 
   return {
-    records,
+    exerciseHistory,
     loading,
     error,
     refreshRecords,

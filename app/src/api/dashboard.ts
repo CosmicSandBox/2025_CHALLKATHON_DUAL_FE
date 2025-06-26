@@ -1,49 +1,18 @@
 import { get } from './client';
+import { API_ENDPOINTS, PatientDashboard } from './config';
 
-export interface TodaySummary {
-  totalSteps: number;
-  totalMinutes: number;
-  totalCalories: number;
-  completedRequiredExercises: number;
-  totalRequiredExercises: number;
-  completionRate: number;
-}
-
-export interface DailyProgress {
-  date: string;
-  dayOfWeek: string;
-  steps: number;
-  minutes: number;
-  calories: number;
-  completedExercises: number;
-}
-
-export interface WeeklyProgress {
-  totalWeeklySteps: number;
-  dailyProgress: DailyProgress[];
-}
-
-export interface RecentActivity {
-  exerciseName: string;
-  durationMinutes: number;
-  timeAgo: string;
-  status: string;
-}
-
-export interface PatientDashboard {
-  todaySummary: TodaySummary;
-  weeklyProgress: WeeklyProgress;
-  recentActivities: RecentActivity[];
-}
-
-export interface PatientDashboardResponse {
-  data: PatientDashboard;
-  message: string;
-  status: string;
-  action: string;
-}
-
-// 환자 대시보드 데이터 조회
-export const getPatientDashboard = async () => {
-  return get<PatientDashboardResponse>('/api/v1/dashboard/patient');
+// 환자 메인페이지 조회
+export const getPatientDashboard = async (): Promise<PatientDashboard> => {
+  try {
+    const response = await get<PatientDashboard>(API_ENDPOINTS.DASHBOARD.PATIENT);
+    
+    if (response.status === 'SUCCESS' && response.data) {
+      return response.data;
+    } else {
+      throw new Error('Failed to get patient dashboard');
+    }
+  } catch (error) {
+    console.error('Error getting patient dashboard:', error);
+    throw error;
+  }
 };

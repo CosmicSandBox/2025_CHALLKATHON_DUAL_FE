@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { HealthRecord, getRecentHealthRecords, HealthRecordRequest, saveHealthRecord } from '../api/health';
+import { PainHistory, getPainHistory } from '../api';
 
-export const usePainRecords = () => {
-  const [records, setRecords] = useState<HealthRecord[]>([]);
+export const usePainRecords = (params?: {
+  startDate?: string;
+  endDate?: string;
+}) => {
+  const [painHistory, setPainHistory] = useState<PainHistory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -10,13 +13,8 @@ export const usePainRecords = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getRecentHealthRecords();
-      
-      if (response.status === 'SUCCESS' && response.data) {
-        setRecords(response.data);
-      } else {
-        throw new Error(response.message || '통증 기록을 불러오는데 실패했습니다.');
-      }
+      const data = await getPainHistory(params || {});
+      setPainHistory(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '통증 기록을 불러오는데 실패했습니다.';
       setError(errorMessage);
@@ -26,37 +24,18 @@ export const usePainRecords = () => {
     }
   };
 
-  const savePainRecord = async (data: HealthRecordRequest) => {
-    try {
-      const response = await saveHealthRecord(data);
-      
-      if (response.status === 'SUCCESS') {
-        // 새로운 기록 저장 후 목록 새로고침
-        await loadRecords();
-        return { success: true };
-      } else {
-        throw new Error(response.message || '통증 기록 저장에 실패했습니다.');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '통증 기록 저장에 실패했습니다.';
-      console.error('통증 기록 저장 오류:', err);
-      return { success: false, error: errorMessage };
-    }
-  };
-
   const refreshRecords = () => {
     loadRecords();
   };
 
   useEffect(() => {
     loadRecords();
-  }, []);
+  }, [params?.startDate, params?.endDate]);
 
   return {
-    records,
+    painHistory,
     loading,
     error,
-    savePainRecord,
     refreshRecords,
   };
 };

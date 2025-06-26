@@ -3,26 +3,33 @@ import {
   API_ENDPOINTS, 
   KakaoAuthUrlResponse, 
   OAuthCallbackRequest, 
-  OAuthCallbackResponse 
+  OAuthCallbackResponse,
+  OAuthProvidersResponse
 } from './config';
 
-// 카카오 로그인 URL 가져오기
-export const getKakaoAuthUrl = async (): Promise<string> => {
+// OAuth2 로그인 URL 조회
+export const getOAuthUrl = async (provider: string): Promise<string> => {
   try {
-    const response = await get<KakaoAuthUrlResponse>(API_ENDPOINTS.AUTH.KAKAO_URL);
+    const endpoint = API_ENDPOINTS.AUTH.OAUTH_URL.replace('{provider}', provider);
+    const response = await get<KakaoAuthUrlResponse>(endpoint);
     
     if (response.status === 'SUCCESS' && response.data?.authUrl) {
       return response.data.authUrl;
     } else {
-      throw new Error('Failed to get Kakao auth URL');
+      throw new Error(`Failed to get ${provider} auth URL`);
     }
   } catch (error) {
-    console.error('Error getting Kakao auth URL:', error);
+    console.error(`Error getting ${provider} auth URL:`, error);
     throw error;
   }
 };
 
-// OAuth 콜백 처리 (인가 코드로 토큰 받기)
+// 카카오 로그인 URL 가져오기 (호환성을 위한 기존 함수)
+export const getKakaoAuthUrl = async (): Promise<string> => {
+  return getOAuthUrl('kakao');
+};
+
+// OAuth2 콜백 처리
 export const processOAuthCallback = async (
   provider: string,
   code: string
@@ -48,6 +55,27 @@ export const processOAuthCallback = async (
     }
   } catch (error) {
     console.error('Error processing OAuth callback:', error);
+    throw error;
+  }
+};
+
+// 카카오 콜백 처리 (호환성을 위한 기존 함수)
+export const processKakaoCallback = async (code: string): Promise<string> => {
+  return processOAuthCallback('kakao', code);
+};
+
+// 지원 OAuth 제공자 목록 조회
+export const getOAuthProviders = async (): Promise<string[]> => {
+  try {
+    const response = await get<OAuthProvidersResponse>(API_ENDPOINTS.AUTH.OAUTH_PROVIDERS);
+    
+    if (response.status === 'SUCCESS' && response.data?.providers) {
+      return response.data.providers;
+    } else {
+      throw new Error('Failed to get OAuth providers');
+    }
+  } catch (error) {
+    console.error('Error getting OAuth providers:', error);
     throw error;
   }
 };
