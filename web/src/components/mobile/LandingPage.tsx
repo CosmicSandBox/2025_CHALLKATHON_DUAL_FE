@@ -6,10 +6,8 @@ import { theme } from '../../styles/theme'
 import { useRef } from 'react'
 import { 
   Footprints, 
-  Heart, 
   Users, 
   Smartphone,
-  Star,
   Download,
   ArrowDown
 } from 'lucide-react'
@@ -122,48 +120,6 @@ const FeatureIcon = styled.div`
   margin: 0 auto ${theme.spacing.lg};
 `
 
-const StatsSection = styled(motion.section)`
-  padding: ${theme.spacing['4xl']} ${theme.spacing.xl};
-  background: linear-gradient(135deg, ${theme.colors.gray50}, ${theme.colors.white});
-  text-align: center;
-`
-
-const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: ${theme.spacing.xl};
-  margin-top: ${theme.spacing['3xl']};
-`
-
-const StatCard = styled(motion.div)`
-  background: ${theme.colors.white};
-  border-radius: ${theme.borderRadius.lg};
-  padding: ${theme.spacing.xl};
-  box-shadow: ${theme.shadow.md};
-  border: 1px solid ${theme.colors.gray100};
-`
-
-const TestimonialSection = styled(motion.section)`
-  padding: ${theme.spacing['5xl']} ${theme.spacing.xl};
-  background: ${theme.colors.white};
-`
-
-const TestimonialCard = styled(motion.div)`
-  background: ${theme.colors.gray50};
-  border-radius: ${theme.borderRadius.xl};
-  padding: ${theme.spacing.xxl};
-  text-align: center;
-  margin-bottom: ${theme.spacing.xxl};
-  position: relative;
-`
-
-const StarRating = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: ${theme.spacing.xs};
-  margin-bottom: ${theme.spacing.lg};
-`
-
 const DownloadSection = styled(motion.section)`
   padding: ${theme.spacing['5xl']} ${theme.spacing.xl};
   background: linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.primaryDark});
@@ -250,7 +206,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted: _onGetSt
 
         <Title variants={itemVariants}>
           <Typography variant="h1" weight="700" align="center">
-            AI와 함께하는<br />
+            걷기와 함께하는<br />
             스마트 재활치료
           </Typography>
         </Title>
@@ -302,24 +258,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted: _onGetSt
               스마트 모니터링
             </Typography>
             <Typography variant="body2" color="secondary">
-              실시간으로 운동량과 통증 수준을 추적하여<br />
-              정확한 재활 진행 상황을 확인할 수 있습니다
-            </Typography>
-          </FeatureCard>
-
-          <FeatureCard
-            variants={cardVariants}
-            whileHover={{ y: -5, boxShadow: theme.shadow.xl }}
-          >
-            <FeatureIcon>
-              <Heart size={32} />
-            </FeatureIcon>
-            <Typography variant="h4" weight="600" style={{ marginBottom: theme.spacing.md }}>
-              맞춤형 프로그램
-            </Typography>
-            <Typography variant="body2" color="secondary">
-              AI 기반 분석으로 개인의 상태에 맞는<br />
-              최적화된 재활 운동을 제공합니다
+              보호자가 실시간으로 위치를 추적하여<br />
+              재활 진행 상황을 확인할 수 있습니다
             </Typography>
           </FeatureCard>
 
@@ -340,115 +280,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted: _onGetSt
           </FeatureCard>
         </FeatureGrid>
       </FeatureSection>
-
-      <StatsSection
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-      >
-        <motion.div variants={itemVariants}>
-          <Typography variant="h3" weight="700" align="center" style={{ marginBottom: theme.spacing.lg }}>
-            신뢰할 수 있는 결과
-          </Typography>
-          <Typography variant="body1" color="secondary" align="center">
-            많은 분들이 워크 메이트와 함께 건강을 되찾고 있습니다
-          </Typography>
-        </motion.div>
-
-        <StatsGrid>
-          <StatCard
-            variants={cardVariants}
-            whileHover={{ scale: 1.02 }}
-          >
-            <Typography variant="h2" weight="700" color="primary" style={{ marginBottom: theme.spacing.sm }}>
-              95%
-            </Typography>
-            <Typography variant="body3" color="secondary">
-              재활 만족도
-            </Typography>
-          </StatCard>
-
-          <StatCard
-            variants={cardVariants}
-            whileHover={{ scale: 1.02 }}
-          >
-            <Typography variant="h2" weight="700" color="primary" style={{ marginBottom: theme.spacing.sm }}>
-              30일
-            </Typography>
-            <Typography variant="body3" color="secondary">
-              평균 회복 단축
-            </Typography>
-          </StatCard>
-
-          <StatCard
-            variants={cardVariants}
-            whileHover={{ scale: 1.02 }}
-          >
-            <Typography variant="h2" weight="700" color="primary" style={{ marginBottom: theme.spacing.sm }}>
-              24/7
-            </Typography>
-            <Typography variant="body3" color="secondary">
-              실시간 모니터링
-            </Typography>
-          </StatCard>
-
-          <StatCard
-            variants={cardVariants}
-            whileHover={{ scale: 1.02 }}
-          >
-            <Typography variant="h2" weight="700" color="primary" style={{ marginBottom: theme.spacing.sm }}>
-              1000+
-            </Typography>
-            <Typography variant="body3" color="secondary">
-              성공 사례
-            </Typography>
-          </StatCard>
-        </StatsGrid>
-      </StatsSection>
-
-      <TestimonialSection
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-      >
-        <motion.div variants={itemVariants}>
-          <Typography variant="h3" weight="700" align="center" style={{ marginBottom: theme.spacing['4xl'] }}>
-            사용자 후기
-          </Typography>
-        </motion.div>
-
-        <TestimonialCard variants={cardVariants}>
-          <StarRating>
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} size={16} fill={theme.colors.warning} color={theme.colors.warning} />
-            ))}
-          </StarRating>
-          <Typography variant="body1" style={{ marginBottom: theme.spacing.lg }}>
-            "수술 후 재활이 막막했는데, 워크 메이트 덕분에 체계적으로 운동할 수 있었어요. 
-            가족들도 제 상태를 실시간으로 확인할 수 있어서 안심됩니다."
-          </Typography>
-          <Typography variant="body3" color="secondary">
-            김○○님 (67세, 고관절 수술 환자)
-          </Typography>
-        </TestimonialCard>
-
-        <TestimonialCard variants={cardVariants}>
-          <StarRating>
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} size={16} fill={theme.colors.warning} color={theme.colors.warning} />
-            ))}
-          </StarRating>
-          <Typography variant="body1" style={{ marginBottom: theme.spacing.lg }}>
-            "부모님의 재활 상황을 멀리서도 확인할 수 있어 정말 좋습니다. 
-            응급 상황 알림 기능 덕분에 빠르게 대응할 수 있었어요."
-          </Typography>
-          <Typography variant="body3" color="secondary">
-            이○○님 (보호자)
-          </Typography>
-        </TestimonialCard>
-      </TestimonialSection>
 
       <DownloadSection
         ref={downloadSectionRef}
