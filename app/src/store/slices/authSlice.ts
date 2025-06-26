@@ -12,6 +12,7 @@ interface AuthState {
   error: string | null;
 }
 
+/* 더미 쓰기 전 초기 상태 */
 const initialState: AuthState = {
   userToken: null,
   userRole: null,
@@ -19,6 +20,16 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
 };
+
+/* 테스트용 더미 데이터 (비활성화)
+const initialState: AuthState = {
+  userToken: 'dummy-token-for-testing', // 테스트용 더미 토큰
+  userRole: 'patient', // 환자 역할로 테스트
+  onboardingComplete: true, // 온보딩 완료 상태
+  isLoading: false,
+  error: null,
+};
+*/
 
 // Async thunks for persistent storage
 export const loadStoredAuthState = createAsyncThunk(
