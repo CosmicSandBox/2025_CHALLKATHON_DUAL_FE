@@ -24,8 +24,7 @@ const CaregiverDashboardScreen: React.FC = () => {
   // Import된 mock data 사용
   const caregiverInfo = mockCaregiverInfo;
   const patient = mockPatient;
-  const urgentAlerts = mockUrgentAlerts;
-  const quickActions = mockQuickActions;
+  const urgentAlerts = mockUrgentAlerts.filter(alert => alert.type !== '운동 중단'); // 운동 중단 알림 제거
 
   const getStatusColor = (status: string) => {
     return status === '온라인' ? '#4CAF50' : '#9E9E9E';
@@ -38,12 +37,6 @@ const CaregiverDashboardScreen: React.FC = () => {
       case 'low': return '#4CAF50';
       default: return Colors.primary;
     }
-  };
-
-  const getProgressColor = (progress: number) => {
-    if (progress >= 80) return '#4CAF50';
-    if (progress >= 60) return '#FF9800';
-    return '#F44336';
   };
 
   const handleCallPatient = () => {
@@ -80,7 +73,6 @@ const CaregiverDashboardScreen: React.FC = () => {
               </View>
               <View style={styles.caregiverInfo}>
                 <Text style={styles.caregiverName}>{caregiverInfo.name} 보호자</Text>
-                <Text style={styles.caregiverRole}>{caregiverInfo.role}</Text>
               </View>
             </View>
           </Card>
@@ -114,27 +106,6 @@ const CaregiverDashboardScreen: React.FC = () => {
                   <Text style={styles.attentionBadgeText}>⚠️</Text>
                 </View>
               )}
-            </View>
-
-            {/* Progress Bar */}
-            <View style={styles.progressSection}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>재활 진행률</Text>
-                <Text style={[styles.progressValue, { color: getProgressColor(patient.progress) }]}>
-                  {patient.progress}%
-                </Text>
-              </View>
-              <View style={styles.progressBar}>
-                <View 
-                  style={[
-                    styles.progressFill, 
-                    { 
-                      width: `${patient.progress}%`,
-                      backgroundColor: getProgressColor(patient.progress)
-                    }
-                  ]} 
-                />
-              </View>
             </View>
 
             {/* Contact Actions */}
@@ -233,26 +204,6 @@ const CaregiverDashboardScreen: React.FC = () => {
             </View>
           </View>
         )}
-
-        {/* Quick Actions - 1인 관리 특화 */}
-        <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>빠른 액션</Text>
-          <View style={styles.actionsGrid}>
-            {quickActions.map((action) => (
-              <TouchableOpacity 
-                key={action.id}
-                style={styles.actionCard}
-                onPress={action.onPress}
-              >
-                <View style={styles.actionIcon}>
-                  <Text style={styles.actionIconText}>{action.icon}</Text>
-                </View>
-                <Text style={styles.actionTitle}>{action.title}</Text>
-                <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
       </ScrollView>
 
       {/* Patient Location Modal */}
