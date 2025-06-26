@@ -333,9 +333,9 @@ const PainRecordScreen: React.FC = () => {
                     )}
                     <View style={[
                       styles.overallPainBadge,
-                      { backgroundColor: item.totalPainScore <= 3 ? '#10B981' : item.totalPainScore <= 6 ? '#F59E0B' : '#EF4444' }
+                      { backgroundColor: item.totalPainScore <= 5 ? '#10B981' : item.totalPainScore <= 10 ? '#F59E0B' : '#EF4444' }
                     ]}>
-                      <Text style={styles.overallPainBadgeText}>{item.totalPainScore}/10</Text>
+                      <Text style={styles.overallPainBadgeText}>{item.totalPainScore}/15</Text>
                     </View>
                   </View>
                 </View>
@@ -349,6 +349,49 @@ const PainRecordScreen: React.FC = () => {
                       </Text>
                     </View>
                   </View>
+                  
+                  {/* 부위별 통증 점수 표시 */}
+                  {item.painScores && (
+                    <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F1F3F4' }}>
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8 }}>부위별 통증 점수</Text>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                        {[
+                          { key: 'legPainScore', name: '다리', icon: '🦵' },
+                          { key: 'kneePainScore', name: '무릎', icon: '🦴' },
+                          { key: 'anklePainScore', name: '발목', icon: '🦶' },
+                          { key: 'heelPainScore', name: '발뒤꿈치', icon: '👠' },
+                          { key: 'backPainScore', name: '허리', icon: '🔴' },
+                        ].map(part => (
+                          <View 
+                            key={part.key}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              backgroundColor: item.painScores[part.key] === 0 ? '#E8F5E8' : 
+                                             item.painScores[part.key] <= 1 ? '#FEF3E2' : 
+                                             item.painScores[part.key] <= 2 ? '#FEE8D5' : '#FEE8E8',
+                              paddingHorizontal: 8,
+                              paddingVertical: 4,
+                              borderRadius: 6,
+                              minWidth: 80,
+                            }}
+                          >
+                            <Text style={{ fontSize: 12, marginRight: 4 }}>{part.icon}</Text>
+                            <Text style={{ fontSize: 12, color: '#666', marginRight: 4 }}>{part.name}</Text>
+                            <Text style={{ 
+                              fontSize: 12, 
+                              fontWeight: '600',
+                              color: item.painScores[part.key] === 0 ? '#10B981' : 
+                                     item.painScores[part.key] <= 1 ? '#F59E0B' : 
+                                     item.painScores[part.key] <= 2 ? '#F97316' : '#EF4444'
+                            }}>
+                              {item.painScores[part.key]}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
                 </View>
               </Card>
             ))

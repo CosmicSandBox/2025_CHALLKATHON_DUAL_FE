@@ -6,8 +6,9 @@ export const recordPainManual = async (painRecord: PainRecord): Promise<string> 
   try {
     const response = await post<string>(API_ENDPOINTS.HEALTH.PAIN_RECORD, painRecord);
     
-    if (response.status === 'SUCCESS' && response.data) {
-      return response.data;
+    if (response.status === 'SUCCESS') {
+      // data가 null일 수 있으므로 기본 성공 메시지 반환
+      return response.data || '통증 기록이 성공적으로 저장되었습니다.';
     } else {
       throw new Error('Failed to record manual pain');
     }
