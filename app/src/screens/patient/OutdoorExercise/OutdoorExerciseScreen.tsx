@@ -16,7 +16,7 @@ import Card from '../../../components/common/Card';
 import { Colors } from '../../../constants/colors';
 import { styles } from './OutdoorExerciseScreen.styled';
 import { OutdoorExerciseScreenNavigationProp, WebViewMessage, LocationSubscription } from './types';
-import { todayStats, weatherInfo, safetyTips } from './mock';
+import { useOutdoorExercise } from '../../../hooks/useOutdoorExercise';
 import { mapHtml } from './mapHtml';
 
 const OutdoorExerciseScreen: React.FC = () => {
@@ -30,6 +30,31 @@ const OutdoorExerciseScreen: React.FC = () => {
   const [mapReady, setMapReady] = useState(false);
   const [exerciseProgress, setExerciseProgress] = useState(0);
   const [locationSubscription, setLocationSubscription] = useState<LocationSubscription | null>(null);
+
+  const { outdoorStatus, loading: exerciseLoading, error, refreshOutdoorStatus } = useOutdoorExercise();
+
+  // Create todayStats from API data
+  const todayStats = {
+    completed: 0,
+    total: 1,
+    distance: outdoorStatus?.yesterdayRecord.distanceKm || 0,
+    time: outdoorStatus?.yesterdayRecord.durationMinutes || 0
+  };
+
+  // Mock data for features not available in API
+  const weatherInfo = {
+    temperature: 22,
+    condition: '맑음',
+    humidity: 65,
+    windSpeed: 2.1
+  };
+
+  const safetyTips = [
+    { icon: '🤸', text: '운동 전 충분한 스트레칭을 해주세요' },
+    { icon: '💧', text: '수분 섭취를 잊지 마세요' },
+    { icon: '🚶', text: '무리하지 말고 천천히 시작하세요' },
+    { icon: '⚠️', text: '이상 증상이 있으면 즉시 중단하세요' }
+  ];
 
   useEffect(() => {
     const checkLocationPermission = async () => {

@@ -7,10 +7,12 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import Card from '../../../components/common/Card';
+import { useHealthRecord } from '../../../hooks/useHealthRecord';
 import { styles } from './HealthCheckScreen.styled';
 import { 
   HealthCheckScreenNavigationProp, 
@@ -19,7 +21,22 @@ import {
   BodyPart, 
   SymptomLevel 
 } from './types';
-import { bodyParts, symptomLevels } from './mock';
+
+// API 대신 사용할 로컬 상수
+const bodyPartsData = [
+  { id: 'leg' as BodyPart, name: '다리', icon: '🦵', description: '다리 전체' },
+  { id: 'knee' as BodyPart, name: '무릎', icon: '🦴', description: '무릎 관절' },
+  { id: 'ankle' as BodyPart, name: '발목', icon: '🦶', description: '발목 관절' },
+  { id: 'heel' as BodyPart, name: '발뒤꿈치', icon: '👠', description: '발뒤꿈치' },
+  { id: 'back' as BodyPart, name: '허리', icon: '🔴', description: '허리 부위' },
+];
+
+const symptomLevelsData = [
+  { id: 'good' as SymptomLevel, name: '좋음', color: '#10B981', bgColor: '#E8F5E8', icon: '😊', description: '불편함 없음' },
+  { id: 'mild' as SymptomLevel, name: '가벼운 불편', color: '#F59E0B', bgColor: '#FEF3E2', icon: '😐', description: '약간의 불편함' },
+  { id: 'moderate' as SymptomLevel, name: '보통 불편', color: '#F97316', bgColor: '#FEE8D5', icon: '😟', description: '보통 정도의 불편함' },
+  { id: 'severe' as SymptomLevel, name: '심한 불편', color: '#EF4444', bgColor: '#FEE8E8', icon: '😰', description: '심각한 불편함' },
+];
 
 const HealthCheckScreen: React.FC = () => {
   const navigation = useNavigation<HealthCheckScreenNavigationProp>();
@@ -45,7 +62,7 @@ const HealthCheckScreen: React.FC = () => {
 
   const handleSubmit = () => {
     // 모든 부위에 대해 체크했는지 확인
-    const uncheckedParts = bodyParts.filter(part => !symptoms[part.id]);
+    const uncheckedParts = bodyPartsData.filter(part => !symptoms[part.id]);
     
     if (uncheckedParts.length > 0) {
       Alert.alert(
@@ -57,7 +74,7 @@ const HealthCheckScreen: React.FC = () => {
     }
 
     // 심한 증상이 있는지 확인
-    const severeSymptoms = bodyParts.filter(part => symptoms[part.id] === 'severe');
+    const severeSymptoms = bodyPartsData.filter(part => symptoms[part.id] === 'severe');
     
     if (severeSymptoms.length > 0) {
       Alert.alert(
@@ -152,7 +169,7 @@ const HealthCheckScreen: React.FC = () => {
         </View>
         <View style={styles.progressContainer}>
           <Text style={styles.progressText}>
-            {getSelectedCount()}/{bodyParts.length}
+            {getSelectedCount()}/{bodyPartsData.length}
           </Text>
         </View>
       </View>
@@ -180,7 +197,7 @@ const HealthCheckScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>상태 구분</Text>
           <Card style={styles.legendCard}>
             <View style={styles.legendContainer}>
-              {symptomLevels.map((level) => (
+              {symptomLevelsData.map((level) => (
                 <View key={level.id} style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: level.color }]} />
                   <Text style={styles.legendName}>{level.name}</Text>
@@ -195,7 +212,7 @@ const HealthCheckScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>부위별 상태</Text>
           <View style={styles.bodyPartsContainer}>
-            {bodyParts.map((bodyPart) => (
+            {bodyPartsData.map((bodyPart) => (
               <Card key={bodyPart.id} style={styles.bodyPartCard}>
                 <View style={styles.bodyPartHeader}>
                   <View style={styles.bodyPartInfo}>
@@ -208,14 +225,14 @@ const HealthCheckScreen: React.FC = () => {
                   {symptoms[bodyPart.id] && (
                     <View style={styles.selectedIndicator}>
                       <Text style={styles.selectedText}>
-                        {symptomLevels.find(l => l.id === symptoms[bodyPart.id])?.name}
+                        {symptomLevelsData.find(l => l.id === symptoms[bodyPart.id])?.name}
                       </Text>
                     </View>
                   )}
                 </View>
                 
                 <View style={styles.symptomButtons}>
-                  {symptomLevels.map((level) => (
+                  {symptomLevelsData.map((level) => (
                     <TouchableOpacity
                       key={level.id}
                       style={[
@@ -277,21 +294,21 @@ const HealthCheckScreen: React.FC = () => {
           <TouchableOpacity 
             style={[
               styles.submitButton,
-              getSelectedCount() === bodyParts.length ? styles.submitButtonActive : styles.submitButtonInactive
+              getSelectedCount() === bodyPartsData.length ? styles.submitButtonActive : styles.submitButtonInactive
             ]} 
             onPress={handleSubmit}
-            disabled={getSelectedCount() < bodyParts.length}
+            disabled={getSelectedCount() < bodyPartsData.length}
           >
             <Text style={[
               styles.submitButtonText,
-              getSelectedCount() === bodyParts.length ? styles.submitButtonTextActive : styles.submitButtonTextInactive
+              getSelectedCount() === bodyPartsData.length ? styles.submitButtonTextActive : styles.submitButtonTextInactive
             ]}>
               건강 상태 기록 완료
             </Text>
             <Feather 
               name="check" 
               size={20} 
-              color={getSelectedCount() === bodyParts.length ? "#FFFFFF" : "#A3A8AF"} 
+              color={getSelectedCount() === bodyPartsData.length ? "#FFFFFF" : "#A3A8AF"} 
               style={styles.submitButtonIcon} 
             />
           </TouchableOpacity>

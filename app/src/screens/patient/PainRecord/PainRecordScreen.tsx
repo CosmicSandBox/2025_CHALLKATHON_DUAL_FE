@@ -7,6 +7,7 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,7 +20,8 @@ import {
   BodyPart,
   PainHistoryItem 
 } from './types';
-import { bodyParts, symptomLevels, mockPainHistory } from './mock';
+import { bodyParts, symptomLevels } from './mock';
+import { usePainRecords } from '../../../hooks/usePainRecords';
 import { styles } from './PainRecordScreen.styled';
 
 type PainRecordScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
@@ -35,7 +37,19 @@ const PainRecordScreen: React.FC = () => {
     back: null,
   });
   const [detailNotes, setDetailNotes] = useState('');
-  const [painHistory] = useState<PainHistoryItem[]>(mockPainHistory);
+  
+  const { painHistory: painData, loading, error, refreshRecords } = usePainRecords();
+
+  if (loading && selectedTab === 'history') {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#2196F3" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>통증 기록을 불러오는 중...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  const painHistory = painData?.painRecords || [];
 
   const handleSymptomSelect = (bodyPart: BodyPart, level: SymptomLevel) => {
     setSymptoms(prev => ({
@@ -221,61 +235,67 @@ const PainRecordScreen: React.FC = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>통증 기록 히스토리</Text>
         <View style={styles.historyList}>
-          {painHistory.map((item) => (
-            <Card key={item.id} style={styles.historyCard}>
-              <View style={styles.historyHeader}>
-                <View style={styles.historyDate}>
-                  <Text style={styles.historyDateText}>{item.date}</Text>
-                  <Text style={styles.historyTimeText}>{item.time}</Text>
-                </View>
-                <View style={styles.historyBadges}>
-                  {item.isPostExercise && (
-                    <View style={styles.postExerciseBadge}>
-                      <Text style={styles.postExerciseBadgeText}>운동 후</Text>
+          {error ? (
+            <View style={{ alignItems: 'center', padding: 20 }}>
+              <Text style={{ fontSize: 16, color: '#f44336', textAlign: 'center', marginBottom: 16 }}>
+                통증 기록을 불러오는데 실패했습니다.
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#2196F3',
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                }}
+                onPress={refreshRecords}
+              >
+                <Text style={{ color: 'white', fontSize: 16 }}>다시 시도</Text>
+              </TouchableOpacity>
+            </View>
+          ) : painHistory.length === 0 ? (
+            <View style={{ alignItems: 'center', padding: 40 }}>
+              <Text style={{ fontSize: 48, marginBottom: 16 }}>📝</Text>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 8 }}>아직 기록된 통증이 없습니다</Text>
+              <Text style={{ fontSize: 14, color: '#666', textAlign: 'center' }}>
+                '기록하기' 탭에서 첫 번째 통증을 기록해보세요
+              </Text>
+            </View>
+          ) : (
+            painHistory.map((item: any, index: number) => (
+              <Card key={item.recordId || index} style={styles.historyCard}>
+                <View style={styles.historyHeader}>
+                  <View style={styles.historyDate}>
+                    <Text style={styles.historyDateText}>{item.recordDate}</Text>
+                    <Text style={styles.historyTimeText}>{item.recordTime}</Text>
+                  </View>
+                  <View style={styles.historyBadges}>
+                    {item.recordType === 'POST_EXERCISE' && (
+                      <View style={styles.postExerciseBadge}>
+                        <Text style={styles.postExerciseBadgeText}>운동 후</Text>
+                      </View>
+                    )}
+                    <View style={[
+                      styles.overallPainBadge,
+                      { backgroundColor: item.totalPainScore <= 3 ? '#10B981' : item.totalPainScore <= 6 ? '#F59E0B' : '#EF4444' }
+                    ]}>
+                      <Text style={styles.overallPainBadgeText}>{item.totalPainScore}/10</Text>
                     </View>
-                  )}
-                  <View style={[
-                    styles.overallPainBadge,
-                    { backgroundColor: item.overallPain <= 3 ? '#10B981' : item.overallPain <= 6 ? '#F59E0B' : '#EF4444' }
-                  ]}>
-                    <Text style={styles.overallPainBadgeText}>{item.overallPain}/10</Text>
                   </View>
                 </View>
-              </View>
 
-              <View style={styles.historyRecords}>
-                {Object.entries(item.symptoms).map(([partId, symptom]) => {
-                  if (!symptom) return null;
-                  const bodyPart = bodyParts.find(bp => bp.id === partId);
-                  const symptomLevel = symptomLevels.find(sl => sl.id === symptom);
-                  
-                  return (
-                    <View key={partId} style={styles.historyRecord}>
-                      <Text style={styles.historyRecordIcon}>{bodyPart?.icon}</Text>
-                      <View style={styles.historyRecordInfo}>
-                        <Text style={styles.historyRecordName}>
-                          {bodyPart?.name}: {symptomLevel?.name}
-                        </Text>
-                      </View>
-                      <View style={[
-                        styles.historyRecordBadge,
-                        { backgroundColor: symptomLevel?.color }
-                      ]}>
-                        <Text style={styles.historyRecordBadgeText}>●</Text>
-                      </View>
+                <View style={styles.historyRecords}>
+                  <View style={styles.historyRecord}>
+                    <Text style={styles.historyRecordIcon}>📝</Text>
+                    <View style={styles.historyRecordInfo}>
+                      <Text style={styles.historyRecordName}>
+                        {item.notes || '상세 기록 없음'}
+                      </Text>
                     </View>
-                  );
-                })}
-              </View>
-
-              {item.notes && (
-                <View style={styles.historyNotes}>
-                  <Text style={styles.historyNotesLabel}>메모:</Text>
-                  <Text style={styles.historyNotesText}>{item.notes}</Text>
+                  </View>
                 </View>
-              )}
-            </Card>
-          ))}
+              </Card>
+            ))
+          )}
         </View>
       </View>
     </ScrollView>

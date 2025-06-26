@@ -6,33 +6,87 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import Card from '../../../components/common/Card';
 import { styles } from './IndoorExerciseScreen.styled';
 import { IndoorExerciseScreenNavigationProp } from './types';
-import { categories, exercises, todayStats } from './mock';
+import { useIndoorExercises } from '../../../hooks/useIndoorExercises';
 
 const IndoorExerciseScreen: React.FC = () => {
   const navigation = useNavigation<IndoorExerciseScreenNavigationProp>();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  
+  const { 
+    exerciseData, 
+    loading, 
+    error, 
+    refreshExercises 
+  } = useIndoorExercises();
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#2196F3" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>운동 목록을 불러오는 중...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ fontSize: 16, color: '#f44336', textAlign: 'center', marginBottom: 16 }}>
+          운동 목록을 불러오는데 실패했습니다.
+        </Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#2196F3',
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderRadius: 8,
+          }}
+          onPress={refreshExercises}
+        >
+          <Text style={{ color: 'white', fontSize: 16 }}>다시 시도</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  // exerciseData에서 exercises와 기타 데이터 추출
+  const exercises = [
+    ...(exerciseData?.requiredExercises || []).map(ex => ({ ...ex, type: 'essential' })),
+    ...(exerciseData?.recommendedExercises || []).map(ex => ({ ...ex, type: 'optional' }))
+  ];
+  const todayStats = exerciseData?.todayProgress;
+  
+  // Mock categories for now (API에 categories가 없다면 기본값 사용)
+  const categories = [
+    { id: 'all', name: '전체', icon: '📋' },
+    { id: 'essential', name: '필수운동', icon: '⭐' },
+    { id: 'balance', name: '균형운동', icon: '⚖️' },
+    { id: 'strength', name: '근력운동', icon: '💪' },
+    { id: 'flexibility', name: '유연성', icon: '🤸' },
+  ];
 
   const filteredExercises = selectedCategory === 'all' 
     ? exercises 
-    : exercises.filter(exercise => exercise.category === selectedCategory);
+    : exercises.filter((exercise: any) => exercise.category === selectedCategory);
 
   // 운동을 타입별로 분류
-  const essentialExercises = filteredExercises.filter(exercise => exercise.type === 'essential');
-  const optionalExercises = filteredExercises.filter(exercise => exercise.type === 'optional');
+  const essentialExercises = filteredExercises.filter((exercise: any) => exercise.type === 'essential');
+  const optionalExercises = filteredExercises.filter((exercise: any) => exercise.type === 'optional');
 
   const handleExercisePress = (exerciseId: string) => {
     setSelectedExercise(exerciseId);
   };
 
   const handleExerciseStart = (exerciseId: string) => {
-    const exercise = exercises.find(e => e.id === exerciseId);
+    const exercise = exercises.find((e: any) => e.exerciseId.toString() === exerciseId);
     if (!exercise) return;
 
     switch (exerciseId) {
@@ -69,22 +123,22 @@ const IndoorExerciseScreen: React.FC = () => {
   };
 
   const renderExerciseCard = (exercise: any) => (
-    <View key={exercise.id}>
+    <View key={exercise.exerciseId}>
       <View
         style={[
           styles.exerciseCard,
-          selectedExercise === exercise.id && styles.selectedExerciseCard,
+          selectedExercise === exercise.exerciseId.toString() && styles.selectedExerciseCard,
           exercise.type === 'essential' && styles.essentialExerciseCard,
         ]}
       >
         <TouchableOpacity
           style={styles.exerciseContent}
-          onPress={() => handleExercisePress(exercise.id)}
+          onPress={() => handleExercisePress(exercise.exerciseId.toString())}
           activeOpacity={0.7}
         >
           <View style={styles.exerciseHeader}>
-            <View style={[styles.exerciseIcon, { backgroundColor: exercise.color + '15' }]}>
-              <Text style={styles.exerciseIconText}>{exercise.icon}</Text>
+            <View style={[styles.exerciseIcon, { backgroundColor: '#2196F3' + '15' }]}>
+              <Text style={styles.exerciseIconText}>🏃</Text>
             </View>
             <View style={styles.exerciseInfo}>
               <View style={styles.exerciseTitleRow}>
@@ -94,25 +148,21 @@ const IndoorExerciseScreen: React.FC = () => {
                     <Text style={styles.essentialText}>필수</Text>
                   </View>
                 )}
-                {exercise.recommended && (
+                {exercise.isRequired && (
                   <View style={styles.recommendedBadge}>
-                    <Text style={styles.recommendedText}>추천</Text>
+                    <Text style={styles.recommendedText}>필수</Text>
                   </View>
                 )}
               </View>
               <Text style={styles.exerciseDescription}>{exercise.description}</Text>
               <View style={styles.exerciseMeta}>
                 <View style={styles.metaItem}>
-                  <Text style={styles.metaIcon}>⏱️</Text>
-                  <Text style={styles.metaText}>{exercise.duration}</Text>
+                  <Text style={styles.metaIcon}>📋</Text>
+                  <Text style={styles.metaText}>순서: {exercise.orderIndex}</Text>
                 </View>
                 <View style={styles.metaItem}>
-                  <Text style={styles.metaIcon}>📊</Text>
-                  <Text style={styles.metaText}>{exercise.difficulty}</Text>
-                </View>
-                <View style={styles.metaItem}>
-                  <Text style={styles.metaIcon}>🕐</Text>
-                  <Text style={styles.metaText}>{exercise.lastCompleted}</Text>
+                  <Text style={styles.metaIcon}>✅</Text>
+                  <Text style={styles.metaText}>{exercise.isCompleted ? '완료' : '미완료'}</Text>
                 </View>
               </View>
             </View>
@@ -121,7 +171,7 @@ const IndoorExerciseScreen: React.FC = () => {
       </View>
 
       {/* 인라인 상세 정보 */}
-      {selectedExercise === exercise.id && (
+      {selectedExercise === exercise.exerciseId.toString() && (
         <View style={styles.inlineDetailCard}>
           <View style={styles.detailHeader}>
             <Text style={styles.detailTitle}>운동 효과</Text>
@@ -135,7 +185,7 @@ const IndoorExerciseScreen: React.FC = () => {
           
           <View style={styles.benefitsContainer}>
             <View style={styles.benefitsList}>
-              {exercise.benefits.map((benefit: string, benefitIndex: number) => (
+              {(exercise.benefits || ['운동 효과 정보를 불러오는 중입니다.']).map((benefit: string, benefitIndex: number) => (
                 <View key={benefitIndex} style={styles.benefitItem}>
                   <Text style={styles.benefitIcon}>✓</Text>
                   <Text style={styles.benefitText}>{benefit}</Text>
@@ -145,17 +195,17 @@ const IndoorExerciseScreen: React.FC = () => {
           </View>
 
           <View style={styles.targetContainer}>
-            <Text style={styles.targetLabel}>측정 항목</Text>
-            <Text style={styles.targetValue}>{exercise.target}</Text>
+            <Text style={styles.targetLabel}>운동 설명</Text>
+            <Text style={styles.targetValue}>{exercise.description}</Text>
           </View>
 
           <TouchableOpacity
             style={styles.startButton}
-            onPress={() => handleExerciseStart(exercise.id)}
+            onPress={() => handleExerciseStart(exercise.exerciseId.toString())}
             activeOpacity={0.8}
           >
             <Text style={styles.startButtonText}>
-              {exercise.target} 시작하기
+              {exercise.name} 시작하기
             </Text>
           </TouchableOpacity>
         </View>
@@ -188,28 +238,28 @@ const IndoorExerciseScreen: React.FC = () => {
                 <Text style={styles.summaryTitle}>오늘의 진행상황</Text>
                 <View style={styles.streakContainer}>
                   <Text style={styles.streakIcon}>🔥</Text>
-                  <Text style={styles.streakText}>{todayStats.streak}일 연속</Text>
+                  <Text style={styles.streakText}>운동 기록</Text>
                 </View>
               </View>
               <View style={styles.progressCircle}>
-                <Text style={styles.progressText}>{todayStats.weeklyGoal}%</Text>
-                <Text style={styles.progressLabel}>주간 목표</Text>
+                <Text style={styles.progressText}>{Math.round(todayStats?.requiredExerciseCompletionRate || 0)}%</Text>
+                <Text style={styles.progressLabel}>완료율</Text>
               </View>
             </View>
             
             <View style={styles.summaryStats}>
               <View style={styles.summaryStat}>
-                <Text style={styles.summaryStatValue}>{todayStats.completed}/{todayStats.total}</Text>
+                <Text style={styles.summaryStatValue}>{todayStats?.completedRequiredExercises || 0}</Text>
                 <Text style={styles.summaryStatLabel}>완료</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryStat}>
-                <Text style={styles.summaryStatValue}>{todayStats.time}분</Text>
+                <Text style={styles.summaryStatValue}>{todayStats?.totalExerciseMinutes || 0}분</Text>
                 <Text style={styles.summaryStatLabel}>총 시간</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryStat}>
-                <Text style={styles.summaryStatValue}>67%</Text>
+                <Text style={styles.summaryStatValue}>{Math.round(todayStats?.requiredExerciseCompletionRate || 0)}%</Text>
                 <Text style={styles.summaryStatLabel}>완료율</Text>
               </View>
             </View>

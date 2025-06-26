@@ -1,20 +1,32 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Card from '../../../components/common/Card';
 import { Colors } from '../../../constants/colors';
 import { styles } from './DashboardScreen.styled';
 import { DashboardScreenNavigationProp } from './types';
-import { mockTodayStats, mockWeeklyData } from './mock';
+import { usePatientDashboard } from '../../../hooks/usePatientDashboard';
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
+  const { dashboardData, loading, error, refreshDashboard } = usePatientDashboard();
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert('오류', error, [
+        { text: '다시 시도', onPress: refreshDashboard },
+        { text: '확인' },
+      ]);
+    }
+  }, [error]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -80,7 +92,9 @@ const DashboardScreen: React.FC = () => {
           <View style={styles.headerBackground} />
           <View>
             <Text style={styles.greeting}>{getGreeting()}</Text>
-            <Text style={styles.name}>홍길동님</Text>
+            <Text style={styles.name}>
+              {dashboardData?.todaySummary?.name ? `${dashboardData.todaySummary.name}님` : '사용자님'}
+            </Text>
             <View style={styles.subtitleContainer}>
               <View style={styles.statusDot} />
               <Text style={styles.subtitle}>오늘도 건강한 하루를 시작해보세요</Text>
@@ -100,40 +114,60 @@ const DashboardScreen: React.FC = () => {
         {/* Today's Summary - 토스 스타일 */}
         <View style={styles.summarySection}>
           <Text style={styles.sectionTitle}>오늘의 요약</Text>
-          <Card style={styles.summaryCard}>
-            <View style={styles.summaryGrid}>
-              <View style={styles.summaryItem}>
-                <Text style={styles.summaryValue}>
-                  {mockTodayStats.steps.toLocaleString()}
-                </Text>
-                <Text style={styles.summaryLabel}>걸음</Text>
+          {loading ? (
+            <Card style={styles.summaryCard}>
+              <View style={[styles.summaryGrid, { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 }]}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={[styles.summaryLabel, { marginTop: 10 }]}>데이터를 불러오는 중...</Text>
               </View>
-              <View style={styles.summaryDivider} />
-              <View style={styles.summaryItem}>
-                <Text style={styles.summaryValue}>{mockTodayStats.exerciseTime}분</Text>
-                <Text style={styles.summaryLabel}>운동</Text>
+            </Card>
+          ) : dashboardData ? (
+            <>
+              <Card style={styles.summaryCard}>
+                <View style={styles.summaryGrid}>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryValue}>
+                      {dashboardData.todaySummary.steps.toLocaleString()}
+                    </Text>
+                    <Text style={styles.summaryLabel}>걸음</Text>
+                  </View>
+                  <View style={styles.summaryDivider} />
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryValue}>{dashboardData.todaySummary.exerciseMinutes}분</Text>
+                    <Text style={styles.summaryLabel}>운동</Text>
+                  </View>
+                  <View style={styles.summaryDivider} />
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryValue}>{dashboardData.todaySummary.distanceKm}km</Text>
+                    <Text style={styles.summaryLabel}>거리</Text>
+                  </View>
+                </View>
+              </Card>
+              
+              {/* Pain Status Card */}
+              <Card style={styles.painCard}>
+                <View style={styles.painContent}>
+                  <View style={styles.painInfo}>
+                    <Text style={styles.painTitle}>오늘의 통증 수준</Text>
+                    <Text style={styles.painSubtitle}>낮을수록 좋아요</Text>
+                  </View>
+                  <View style={styles.painValueContainer}>
+                    <Text style={styles.painValue}>{dashboardData.todaySummary.todayPainLevel}</Text>
+                    <Text style={styles.painMaxValue}>/15</Text>
+                  </View>
+                </View>
+              </Card>
+            </>
+          ) : (
+            <Card style={styles.summaryCard}>
+              <View style={[styles.summaryGrid, { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 }]}>
+                <Text style={styles.summaryLabel}>데이터를 불러올 수 없습니다</Text>
+                <TouchableOpacity onPress={refreshDashboard} style={{ marginTop: 10 }}>
+                  <Text style={[styles.summaryLabel, { color: Colors.primary }]}>다시 시도</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.summaryDivider} />
-              <View style={styles.summaryItem}>
-                <Text style={styles.summaryValue}>{mockTodayStats.distance}km</Text>
-                <Text style={styles.summaryLabel}>거리</Text>
-              </View>
-            </View>
-          </Card>
-          
-          {/* Pain Status Card */}
-          <Card style={styles.painCard}>
-            <View style={styles.painContent}>
-              <View style={styles.painInfo}>
-                <Text style={styles.painTitle}>오늘의 통증 수준</Text>
-                <Text style={styles.painSubtitle}>낮을수록 좋아요</Text>
-              </View>
-              <View style={styles.painValueContainer}>
-                <Text style={styles.painValue}>{mockTodayStats.averagePain}</Text>
-                <Text style={styles.painMaxValue}>/10</Text>
-              </View>
-            </View>
-          </Card>
+            </Card>
+          )}
         </View>
 
         {/* Quick Actions - 실내/실외 가시적 구분 */}
@@ -204,39 +238,59 @@ const DashboardScreen: React.FC = () => {
         {/* Weekly Progress */}
         <View style={styles.progressSection}>
           <Text style={styles.sectionTitle}>이번 주 진행상황</Text>
-          <Card style={styles.progressCard}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>주간 걸음 수</Text>
-              <Text style={styles.progressTotal}>
-                {mockWeeklyData
-                  .reduce((sum, day) => sum + day.steps, 0)
-                  .toLocaleString()}{' '}
-                걸음
-              </Text>
-            </View>
-            <View style={styles.progressBars}>
-              {mockWeeklyData.map((day, index) => (
-                <View key={index} style={styles.progressBarContainer}>
-                  <View style={styles.progressBar}>
-                    <View
-                      style={[
-                        styles.progressBarFill,
-                        {
-                          height: `${(day.steps / 4000) * 100}%`,
-                          backgroundColor:
-                            day.steps >= 3000 ? Colors.primary : Colors.accent,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.progressDay}>{day.day}</Text>
-                  <Text style={styles.progressSteps}>
-                    {day.steps.toLocaleString()}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </Card>
+          {loading ? (
+            <Card style={styles.progressCard}>
+              <View style={[styles.summaryGrid, { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 }]}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={[styles.summaryLabel, { marginTop: 10 }]}>데이터를 불러오는 중...</Text>
+              </View>
+            </Card>
+          ) : dashboardData?.weeklySteps ? (
+            <Card style={styles.progressCard}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressTitle}>주간 걸음 수</Text>
+                <Text style={styles.progressTotal}>
+                  {dashboardData.weeklySteps.totalSteps.toLocaleString()} 걸음
+                </Text>
+              </View>
+              <View style={styles.progressBars}>
+                {dashboardData.weeklySteps.dailySteps.map((day, index) => {
+                  const maxSteps = Math.max(...dashboardData.weeklySteps.dailySteps.map(d => d.steps));
+                  const percentage = maxSteps > 0 ? (day.steps / maxSteps) * 100 : 0;
+                  
+                  return (
+                    <View key={index} style={styles.progressBarContainer}>
+                      <View style={styles.progressBar}>
+                        <View
+                          style={[
+                            styles.progressBarFill,
+                            {
+                              height: `${Math.max(percentage, 5)}%`,
+                              backgroundColor:
+                                day.steps >= 3000 ? Colors.primary : Colors.accent,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.progressDay}>{day.dayName}</Text>
+                      <Text style={styles.progressSteps}>
+                        {day.steps.toLocaleString()}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </Card>
+          ) : (
+            <Card style={styles.progressCard}>
+              <View style={[styles.summaryGrid, { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 }]}>
+                <Text style={styles.summaryLabel}>주간 데이터를 불러올 수 없습니다</Text>
+                <TouchableOpacity onPress={refreshDashboard} style={{ marginTop: 10 }}>
+                  <Text style={[styles.summaryLabel, { color: Colors.primary }]}>다시 시도</Text>
+                </TouchableOpacity>
+              </View>
+            </Card>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
