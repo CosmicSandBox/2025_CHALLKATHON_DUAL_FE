@@ -35,7 +35,37 @@ const ExerciseHistoryScreen: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'all' | 'indoor' | 'outdoor'>('all');
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('week');
   
-  const { exerciseHistory: records, loading, error, refreshRecords } = useExerciseRecords();
+  // 날짜 범위 계산
+  const getDateRange = () => {
+    const today = new Date();
+    const endDate = today.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+    
+    let startDate: string;
+    if (selectedPeriod === 'week') {
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      startDate = weekAgo.toISOString().split('T')[0];
+    } else if (selectedPeriod === 'month') {
+      const monthAgo = new Date(today);
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      startDate = monthAgo.toISOString().split('T')[0];
+    } else {
+      // 'all'인 경우 1년 전부터
+      const yearAgo = new Date(today);
+      yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+      startDate = yearAgo.toISOString().split('T')[0];
+    }
+    
+    return { startDate, endDate };
+  };
+
+  const { startDate, endDate } = getDateRange();
+  
+  const { exerciseHistory: records, loading, error, refreshRecords } = useExerciseRecords({
+    exerciseType: selectedTab === 'all' ? undefined : selectedTab === 'indoor' ? 'INDOOR' : 'OUTDOOR',
+    startDate,
+    endDate,
+  });
 
   // 로딩 상태 처리
   if (loading) {

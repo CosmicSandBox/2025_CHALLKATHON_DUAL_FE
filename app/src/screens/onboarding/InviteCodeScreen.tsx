@@ -11,6 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { linkPatient } from '../../api';
 import { completeOnboarding, logout } from '../../store/slices/authSlice';
 import { RootState } from '../../store';
 import { OnboardingStackParamList } from '../../navigation/types';
@@ -43,13 +44,15 @@ const InviteCodeScreen: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('초대 코드 검증 시작:', inviteCode);
+      
+      // 실제 API 호출
+      const result = await linkPatient({ patientLinkCode: inviteCode });
+      console.log('초대 코드 검증 성공:', result);
 
-      // Mock successful verification
       Alert.alert(
         '초대 코드 확인 완료',
-        '초대 코드가 확인되었습니다. 서비스를 시작합니다.',
+        result || '초대 코드가 확인되었습니다. 서비스를 시작합니다.',
         [
           {
             text: '확인',
@@ -58,7 +61,9 @@ const InviteCodeScreen: React.FC = () => {
         ]
       );
     } catch (error) {
-      Alert.alert('오류', '초대 코드 확인에 실패했습니다. 다시 시도해주세요.');
+      console.error('초대 코드 검증 실패:', error);
+      const errorMessage = error instanceof Error ? error.message : '초대 코드 확인에 실패했습니다.';
+      Alert.alert('오류', errorMessage + '\n\n다시 시도해주세요.');
     } finally {
       setIsLoading(false);
     }

@@ -31,7 +31,7 @@ export const useExerciseRecords = (params?: {
 
   useEffect(() => {
     loadRecords();
-  }, [params?.exerciseType, params?.startDate, params?.endDate]);
+  }, [JSON.stringify(params)]); // params 객체 전체를 감시
 
   return {
     exerciseHistory,

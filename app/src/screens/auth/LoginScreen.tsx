@@ -106,6 +106,32 @@ const LoginScreen: React.FC = () => {
     setShowWebView(false);
   };
 
+  // 카카오 로그인 API 테스트 함수
+  const testKakaoAPI = async () => {
+    try {
+      console.log('🧪 === 카카오 로그인 API 테스트 시작 ===');
+      
+      // 1. 카카오 인증 URL 가져오기 테스트
+      console.log('1️⃣ 카카오 인증 URL 요청 테스트...');
+      const authUrl = await KakaoService.testGetAuthUrl();
+      console.log('✅ 인증 URL 수신 성공:', authUrl.substring(0, 100) + '...');
+      
+      Alert.alert(
+        '카카오 API 테스트 결과',
+        `✅ 카카오 인증 URL 요청 성공!\n\nURL: ${authUrl.substring(0, 80)}...`,
+        [{ text: '확인' }]
+      );
+      
+    } catch (error) {
+      console.error('❌ 카카오 API 테스트 실패:', error);
+      Alert.alert(
+        '카카오 API 테스트 실패',
+        `❌ 오류: ${error instanceof Error ? error.message : String(error)}`,
+        [{ text: '확인' }]
+      );
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -212,6 +238,15 @@ const LoginScreen: React.FC = () => {
 
         {selectedRole && (
           <View style={styles.loginSection}>
+            {/* 카카오 API 테스트 버튼 (개발용) */}
+            <TouchableOpacity 
+              style={[styles.testButton]}
+              onPress={testKakaoAPI}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.testButtonText}>🧪 카카오 API 테스트</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity 
               style={[styles.kakaoButton, isLoading && styles.kakaoButtonDisabled]}
               onPress={handleKakaoLogin}
@@ -378,6 +413,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: Spacing.sm,
     maxWidth: '80%',
+  },
+  testButton: {
+    backgroundColor: Colors.surface,
+    borderRadius: Spacing.cardRadius,
+    padding: Spacing.md,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  testButtonText: {
+    ...Typography.body,
+    color: Colors.primary,
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 

@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import Card from '../../../components/common/Card';
 import { styles } from './StretchingMeasurementScreen.styled';
+import { recordSimpleExercise } from '../../../api';
 import { 
   StretchingMeasurementScreenNavigationProp,
   SideType,
@@ -28,6 +29,8 @@ const StretchingMeasurementScreen: React.FC = () => {
   const [holdTimer, setHoldTimer] = useState(exerciseConstants.holdTime);
   const [isResting, setIsResting] = useState(false);
   const [restTimer, setRestTimer] = useState(exerciseConstants.restTime);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -47,6 +50,7 @@ const StretchingMeasurementScreen: React.FC = () => {
     setIsHolding(false);
     setIsResting(false);
     setHoldTimer(exerciseConstants.holdTime);
+    setStartTime(Date.now()); // 시작 시간 기록
   };
 
   const handleStartHold = () => {
@@ -70,7 +74,7 @@ const StretchingMeasurementScreen: React.FC = () => {
     }).start();
   };
 
-  const handleHoldComplete = () => {
+  const handleHoldComplete = async () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -94,22 +98,69 @@ const StretchingMeasurementScreen: React.FC = () => {
       }, 1000);
     } else {
       if (currentSet >= exerciseConstants.totalSets) {
-        Alert.alert(
-          '운동 완료! 🎉',
-          `다리 스트레칭 ${exerciseConstants.totalSets}세트를 모두 완료하셨습니다!\n\n오늘의 목표를 달성했어요.`,
-          [
-            {
-              text: '확인',
-              onPress: () => {
-                setStarted(false);
-                navigation.navigate('HealthCheck', {
-                  exerciseName: '다리 스트레칭',
-                  exerciseType: 'stretching'
-                });
+        // 운동 완료 - API 호출
+        try {
+          setIsSubmitting(true);
+          
+          const totalDuration = startTime ? Math.max(1, Math.floor((Date.now() - startTime) / 60000)) : 5; // 분 단위
+          
+          const exerciseRecord = {
+            exerciseId: 2, // 다리 스트레칭 운동 ID
+            durationMinutes: totalDuration,
+            notes: `다리 스트레칭 ${exerciseConstants.totalSets}세트 완료`
+          };
+
+          console.log('스트레칭 운동 기록 전송:', exerciseRecord);
+          
+          const result = await recordSimpleExercise(exerciseRecord);
+          console.log('스트레칭 운동 기록 성공:', result);
+
+          Alert.alert(
+            '운동 완료! 🎉',
+            `다리 스트레칭 ${exerciseConstants.totalSets}세트를 모두 완료하셨습니다!\n\n오늘의 목표를 달성했어요.`,
+            [
+              {
+                text: '확인',
+                onPress: () => {
+                  setStarted(false);
+                  navigation.navigate('HealthCheck', {
+                    exerciseName: '다리 스트레칭',
+                    exerciseType: 'stretching',
+                    exerciseData: {
+                      duration: totalDuration * 60, // 초 단위로 변환
+                      sets: exerciseConstants.totalSets
+                    }
+                  });
+                },
               },
-            },
-          ]
-        );
+            ]
+          );
+        } catch (error) {
+          console.error('스트레칭 운동 기록 저장 실패:', error);
+          
+          Alert.alert(
+            '운동 완료! 🎉',
+            `다리 스트레칭 ${exerciseConstants.totalSets}세트를 모두 완료하셨습니다!\n\n기록 저장에는 실패했지만 건강 체크는 계속 진행됩니다.`,
+            [
+              {
+                text: '확인',
+                onPress: () => {
+                  setStarted(false);
+                  navigation.navigate('HealthCheck', {
+                    exerciseName: '다리 스트레칭',
+                    exerciseType: 'stretching',
+                    exerciseData: {
+                      duration: 5 * 60, // 기본값 5분
+                      sets: exerciseConstants.totalSets
+                    }
+                  });
+                },
+              },
+            ]
+          );
+        } finally {
+          setIsSubmitting(false);
+        }
       } else {
         setCurrentSet(currentSet + 1);
         setCurrentSide('left');

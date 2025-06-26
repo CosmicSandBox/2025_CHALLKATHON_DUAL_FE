@@ -6,7 +6,10 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
+import { markAlertAsRead } from '../../api';
 import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
@@ -14,6 +17,7 @@ import { Spacing } from '../../constants/spacing';
 
 const NotificationsScreen: React.FC = () => {
   const [filterType, setFilterType] = useState<'all' | 'urgent' | 'warning' | 'info'>('all');
+  const [isMarkingRead, setIsMarkingRead] = useState<string | null>(null);
 
   // 1명의 환자 정보
   const patient = {
@@ -124,8 +128,24 @@ const NotificationsScreen: React.FC = () => {
     console.log('알림 선택:', notification.title);
   };
 
-  const handleMarkAsRead = (notificationId: string) => {
-    console.log('읽음 처리:', notificationId);
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      setIsMarkingRead(notificationId);
+      console.log('알림 읽음 처리 시작:', notificationId);
+      
+      const result = await markAlertAsRead(notificationId);
+      console.log('알림 읽음 처리 성공:', result);
+      
+      // TODO: 실제로는 알림 목록을 새로고침해야 함
+      // 현재는 목업 데이터이므로 로그만 출력
+      
+    } catch (error) {
+      console.error('알림 읽음 처리 실패:', error);
+      const errorMessage = error instanceof Error ? error.message : '알림 읽음 처리에 실패했습니다.';
+      Alert.alert('오류', errorMessage);
+    } finally {
+      setIsMarkingRead(null);
+    }
   };
 
   const handleMarkAllAsRead = () => {
@@ -303,10 +323,15 @@ const NotificationsScreen: React.FC = () => {
                   
                   {!notification.isRead && (
                     <TouchableOpacity 
-                      style={styles.markAsReadButton}
+                      style={[styles.markAsReadButton, isMarkingRead === notification.id && { opacity: 0.5 }]}
                       onPress={() => handleMarkAsRead(notification.id)}
+                      disabled={isMarkingRead === notification.id}
                     >
-                      <Text style={styles.markAsReadText}>읽음 처리</Text>
+                      {isMarkingRead === notification.id ? (
+                        <ActivityIndicator color="#666" size="small" />
+                      ) : (
+                        <Text style={styles.markAsReadText}>읽음 처리</Text>
+                      )}
                     </TouchableOpacity>
                   )}
                 </Card>

@@ -14,6 +14,7 @@ import { Feather } from '@expo/vector-icons';
 import { Pedometer } from 'expo-sensors';
 import Card from '../../../components/common/Card';
 import { styles } from './WalkingMeasurementScreen.styled';
+import { recordWalkingExercise } from '../../../api';
 import { 
   WalkingMeasurementScreenNavigationProp,
   WalkingStats,
@@ -33,6 +34,7 @@ const WalkingMeasurementScreen: React.FC = () => {
   const [isPedometerAvailable, setIsPedometerAvailable] = useState<boolean | null>(null);
   const [pedometerError, setPedometerError] = useState<string | null>(null);
   const [startTimestamp, setStartTimestamp] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -220,20 +222,81 @@ const WalkingMeasurementScreen: React.FC = () => {
         { text: '취소', style: 'cancel' },
         { 
           text: '종료', 
-          onPress: () => {
+          onPress: async () => {
             console.log('Stopping walking measurement...');
             
-            setIsWalking(false);
-            stopTimer();
-            unsubscribePedometer();
-            stopPulseAnimation();
-            
-            navigation.navigate('HealthCheck', {
-              exerciseName: '가벼운 걷기',
-              exerciseType: 'walking'
-            });
-            
-            console.log('Walking measurement stopped');
+            try {
+              setIsSubmitting(true);
+              
+              // 운동 기록 데이터 준비
+              const exerciseRecord = {
+                exerciseId: 1, // 가벼운 걷기 운동 ID
+                durationMinutes: Math.max(1, Math.floor(elapsedTime / 60)), // 최소 1분
+                steps: steps,
+                distanceKm: Math.round(distance / 1000 * 100) / 100, // 미터를 km로 변환
+                caloriesBurned: calories,
+                notes: `실내 걷기 운동 완료 (${formatTime(elapsedTime)})`
+              };
+
+              console.log('운동 기록 전송:', exerciseRecord);
+              
+              // API 호출
+              const result = await recordWalkingExercise(exerciseRecord);
+              console.log('운동 기록 성공:', result);
+
+              // 측정 종료
+              setIsWalking(false);
+              stopTimer();
+              unsubscribePedometer();
+              stopPulseAnimation();
+              
+              // 운동 후 건강 체크로 이동 (운동 데이터 전달)
+              navigation.navigate('HealthCheck', {
+                exerciseName: '가벼운 걷기',
+                exerciseType: 'walking',
+                exerciseData: {
+                  duration: elapsedTime,
+                  steps: steps,
+                  distance: distance,
+                  calories: calories
+                }
+              });
+              
+              console.log('Walking measurement stopped and recorded');
+              
+            } catch (error) {
+              console.error('운동 기록 저장 실패:', error);
+              
+              // 오류가 발생해도 측정은 종료
+              setIsWalking(false);
+              stopTimer();
+              unsubscribePedometer();
+              stopPulseAnimation();
+              
+              Alert.alert(
+                '기록 저장 실패', 
+                '운동 기록 저장에 실패했습니다. 건강 체크는 계속 진행됩니다.',
+                [
+                  {
+                    text: '확인',
+                    onPress: () => {
+                      navigation.navigate('HealthCheck', {
+                        exerciseName: '가벼운 걷기',
+                        exerciseType: 'walking',
+                        exerciseData: {
+                          duration: elapsedTime,
+                          steps: steps,
+                          distance: distance,
+                          calories: calories
+                        }
+                      });
+                    }
+                  }
+                ]
+              );
+            } finally {
+              setIsSubmitting(false);
+            }
           }
         },
       ]
@@ -445,15 +508,21 @@ const WalkingMeasurementScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.startButton}
             onPress={startWalking}
+            disabled={!isPedometerAvailable || !!pedometerError}
           >
             <Text style={styles.startButtonText}>걷기 시작</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            style={styles.stopButton}
+            style={[styles.stopButton, isSubmitting && { opacity: 0.7 }]}
             onPress={stopWalking}
+            disabled={isSubmitting}
           >
-            <Text style={styles.stopButtonText}>걷기 종료</Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.stopButtonText}>걷기 종료</Text>
+            )}
           </TouchableOpacity>
         )}
       </View>

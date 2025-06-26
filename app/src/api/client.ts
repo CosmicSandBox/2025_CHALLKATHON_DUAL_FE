@@ -28,13 +28,32 @@ export const apiClient = async <T>(
   // 인증 토큰이 있으면 Authorization 헤더 추가
   if (authToken) {
     headers.Authorization = `Bearer ${authToken}`;
+    console.log('🔑 API 요청에 토큰 포함:', endpoint, '- 토큰:', authToken.substring(0, 20) + '...');
+  } else {
+    console.log('⚠️ API 요청에 토큰 없음:', endpoint);
   }
 
   try {
+    console.log('📡 API 요청:', options.method || 'GET', url);
+    
     const response = await fetch(url, {
       ...options,
       headers,
     });
+
+    console.log('📊 API 응답 상태:', response.status, endpoint);
+    // API 응답 본문 로그
+    if (response.status >= 200 && response.status < 300) {
+      const responseBody = await response.text();
+      console.log('📄 API 응답 본문:', responseBody);
+      // JSON 파싱 시도
+      try {
+        return JSON.parse(responseBody) as ApiResponse<T>;
+      } catch (jsonError) {
+        console.error('❗️ JSON 파싱 오류:', jsonError);
+        throw new Error('응답 본문이 JSON 형식이 아닙니다.');
+      }
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -43,7 +62,7 @@ export const apiClient = async <T>(
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('API request failed:', error);
+    console.error('❌ API request failed:', error);
     throw error;
   }
 };

@@ -7,12 +7,14 @@ import {
   Alert,
   ScrollView,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import Card from '../../../components/common/Card';
 import { IndoorStackParamList } from '../../../navigation/types';
+import { recordSimpleExercise } from '../../../api';
 import { StandingMeasurementState } from './types';
 import { 
   EXERCISE_CONFIG, 
@@ -34,6 +36,8 @@ const StandingMeasurementScreen: React.FC = () => {
     restTimer: EXERCISE_CONFIG.restDuration,
     currentPhase: 'sitting',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -55,6 +59,7 @@ const StandingMeasurementScreen: React.FC = () => {
       currentPhase: 'sitting',
       isResting: false,
     }));
+    setStartTime(Date.now()); // 시작 시간 기록
   };
 
   const handleRep = () => {
@@ -77,23 +82,75 @@ const StandingMeasurementScreen: React.FC = () => {
       if (newRep >= EXERCISE_CONFIG.repsPerSet) {
         // 한 세트 완료
         if (state.currentSet >= EXERCISE_CONFIG.totalSets) {
-          // 모든 세트 완료
-          Alert.alert(
-            '운동 완료! 🎉',
-            `서서하기 운동 ${EXERCISE_CONFIG.totalSets}세트를 모두 완료하셨습니다!\n\n하체 근력이 크게 향상되었어요.`,
-            [
-              {
-                text: '확인',
-                onPress: () => {
-                  setState(prev => ({ ...prev, started: false }));
-                  navigation.navigate('HealthCheck', {
-                    exerciseName: '서서하기 운동',
-                    exerciseType: 'standing'
-                  });
-                },
-              },
-            ]
-          );
+          // 모든 세트 완료 - API 호출
+          const completeExercise = async () => {
+            try {
+              setIsSubmitting(true);
+              
+              const totalDuration = startTime ? Math.max(1, Math.floor((Date.now() - startTime) / 60000)) : 3; // 분 단위
+              
+              const exerciseRecord = {
+                exerciseId: 4, // 서서하기 운동 ID  
+                durationMinutes: totalDuration,
+                notes: `서서하기 운동 ${EXERCISE_CONFIG.totalSets}세트 (${EXERCISE_CONFIG.repsPerSet}회/세트) 완료`
+              };
+
+              console.log('서서하기 운동 기록 전송:', exerciseRecord);
+              
+              const result = await recordSimpleExercise(exerciseRecord);
+              console.log('서서하기 운동 기록 성공:', result);
+
+              Alert.alert(
+                '운동 완료! 🎉',
+                `서서하기 운동 ${EXERCISE_CONFIG.totalSets}세트를 모두 완료하셨습니다!\n\n하체 근력이 크게 향상되었어요.`,
+                [
+                  {
+                    text: '확인',
+                    onPress: () => {
+                      setState(prev => ({ ...prev, started: false }));
+                      navigation.navigate('HealthCheck', {
+                        exerciseName: '서서하기 운동',
+                        exerciseType: 'standing',
+                        exerciseData: {
+                          duration: totalDuration * 60,
+                          sets: EXERCISE_CONFIG.totalSets,
+                          reps: EXERCISE_CONFIG.repsPerSet
+                        }
+                      });
+                    },
+                  },
+                ]
+              );
+            } catch (error) {
+              console.error('서서하기 운동 기록 저장 실패:', error);
+              
+              Alert.alert(
+                '운동 완료! 🎉',
+                `서서하기 운동 ${EXERCISE_CONFIG.totalSets}세트를 모두 완료하셨습니다!\n\n기록 저장에는 실패했지만 건강 체크는 계속 진행됩니다.`,
+                [
+                  {
+                    text: '확인',
+                    onPress: () => {
+                      setState(prev => ({ ...prev, started: false }));
+                      navigation.navigate('HealthCheck', {
+                        exerciseName: '서서하기 운동',
+                        exerciseType: 'standing',
+                        exerciseData: {
+                          duration: 3 * 60, // 기본값 3분
+                          sets: EXERCISE_CONFIG.totalSets,
+                          reps: EXERCISE_CONFIG.repsPerSet
+                        }
+                      });
+                    },
+                  },
+                ]
+              );
+            } finally {
+              setIsSubmitting(false);
+            }
+          };
+          
+          completeExercise();
         } else {
           // 다음 세트로
           setState(prev => ({

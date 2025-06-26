@@ -12,6 +12,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import Card from '../../../components/common/Card';
+import { recordPainAfterExercise } from '../../../api';
 import { useHealthRecord } from '../../../hooks/useHealthRecord';
 import { styles } from './HealthCheckScreen.styled';
 import { 
@@ -52,6 +53,7 @@ const HealthCheckScreen: React.FC = () => {
   });
   
   const [detailNotes, setDetailNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSymptomSelect = (bodyPart: BodyPart, level: SymptomLevel) => {
     setSymptoms(prev => ({
@@ -89,50 +91,69 @@ const HealthCheckScreen: React.FC = () => {
     }
   };
 
-  const saveAndExit = () => {
-    // 여기에 건강 상태 데이터 저장 로직 추가
-    const healthCheckData = {
-      exerciseName: params?.exerciseName,
-      exerciseType: params?.exerciseType,
-      symptoms,
-      detailNotes,
-      timestamp: new Date().toISOString(),
-    };
-    
-    console.log('Health Check Data:', healthCheckData);
+  const saveAndExit = async () => {
+    try {
+      setIsSubmitting(true);
 
-    // 운동 기록에 저장할 데이터 생성
-    const exerciseRecord = {
-      id: Date.now().toString(),
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-      type: 'indoor' as const,
-      subType: params?.exerciseType || 'walking',
-      name: params?.exerciseName || '실내 운동',
-      duration: 15, // 기본값, 실제로는 운동 시간을 전달받아야 함
-      painAfter: Object.values(symptoms).filter(s => s !== null).length > 0 
-        ? Math.round(Object.values(symptoms).reduce((sum, s) => sum + (s === 'good' ? 1 : s === 'mild' ? 3 : s === 'moderate' ? 6 : 8), 0) / Object.values(symptoms).filter(s => s !== null).length)
-        : 0,
-      notes: detailNotes,
-      completionRate: 100,
-      difficulty: 'normal' as const,
-    };
-
-    console.log('Exercise Record Data:', exerciseRecord);
-
-    Alert.alert(
-      '건강 상태 기록 완료',
-      '운동 후 건강 상태가 기록되었습니다.',
-      [
-        {
-          text: '확인',
-          onPress: () => {
-            // 실내 운동 메인으로 돌아가기
-            navigation.navigate('IndoorToday' as never);
-          }
+      // 증상 레벨을 점수로 변환 (good: 0, mild: 1, moderate: 2, severe: 3)
+      const levelToScore = (level: SymptomLevel | null): number => {
+        if (!level) return 0;
+        switch (level) {
+          case 'good': return 0;
+          case 'mild': return 1;
+          case 'moderate': return 2;
+          case 'severe': return 3;
+          default: return 0;
         }
-      ]
-    );
+      };
+
+      const painRecord = {
+        legPainScore: levelToScore(symptoms.leg),
+        kneePainScore: levelToScore(symptoms.knee),
+        anklePainScore: levelToScore(symptoms.ankle),
+        heelPainScore: levelToScore(symptoms.heel),
+        backPainScore: levelToScore(symptoms.back),
+        notes: detailNotes || `${params?.exerciseName || '운동'} 후 건강 상태 기록`,
+      };
+
+      console.log('운동 후 통증 기록 전송:', painRecord);
+      
+      // 운동 후 통증 기록 API 호출
+      const result = await recordPainAfterExercise(painRecord);
+      console.log('운동 후 통증 기록 성공:', result);
+
+      Alert.alert(
+        '건강 상태 기록 완료',
+        result || '운동 후 건강 상태가 기록되었습니다.',
+        [
+          {
+            text: '확인',
+            onPress: () => {
+              // 실내 운동 메인으로 돌아가기
+              navigation.navigate('IndoorToday' as never);
+            }
+          }
+        ]
+      );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '건강 상태 기록 저장에 실패했습니다.';
+      console.error('건강 상태 기록 저장 오류:', err);
+      Alert.alert(
+        '저장 실패', 
+        errorMessage,
+        [
+          {
+            text: '확인',
+            onPress: () => {
+              // 저장에 실패해도 메인으로 돌아가기
+              navigation.navigate('IndoorToday' as never);
+            }
+          }
+        ]
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleGoBack = () => {
@@ -297,20 +318,26 @@ const HealthCheckScreen: React.FC = () => {
               getSelectedCount() === bodyPartsData.length ? styles.submitButtonActive : styles.submitButtonInactive
             ]} 
             onPress={handleSubmit}
-            disabled={getSelectedCount() < bodyPartsData.length}
+            disabled={getSelectedCount() < bodyPartsData.length || isSubmitting}
           >
-            <Text style={[
-              styles.submitButtonText,
-              getSelectedCount() === bodyPartsData.length ? styles.submitButtonTextActive : styles.submitButtonTextInactive
-            ]}>
-              건강 상태 기록 완료
-            </Text>
-            <Feather 
-              name="check" 
-              size={20} 
-              color={getSelectedCount() === bodyPartsData.length ? "#FFFFFF" : "#A3A8AF"} 
-              style={styles.submitButtonIcon} 
-            />
+            {isSubmitting ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <Text style={[
+                  styles.submitButtonText,
+                  getSelectedCount() === bodyPartsData.length ? styles.submitButtonTextActive : styles.submitButtonTextInactive
+                ]}>
+                  건강 상태 기록 완료
+                </Text>
+                <Feather 
+                  name="check" 
+                  size={20} 
+                  color={getSelectedCount() === bodyPartsData.length ? "#FFFFFF" : "#A3A8AF"} 
+                  style={styles.submitButtonIcon} 
+                />
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

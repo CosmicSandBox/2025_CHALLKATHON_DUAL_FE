@@ -16,6 +16,7 @@ import ExerciseAlertModal from '../../components/settings/ExerciseAlertModal';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
+import { deleteUser } from '../../api';
 import { useDispatch } from 'react-redux';
 import { signOut } from '../../store/slices/authSlice';
 import { AppDispatch } from '../../store';
@@ -29,6 +30,7 @@ const SettingsScreen: React.FC = () => {
   const [exerciseAlerts, setExerciseAlerts] = useState(true);
   const [isLinkedToCaregiver, setIsLinkedToCaregiver] = useState(false);
   const [showExerciseAlertModal, setShowExerciseAlertModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
@@ -104,10 +106,31 @@ const SettingsScreen: React.FC = () => {
                 { 
                   text: '완전 삭제', 
                   style: 'destructive',
-                  onPress: () => {
-                    // 계정 삭제 로직
-                    console.log('계정 삭제 처리');
-                    dispatch(signOut());
+                  onPress: async () => {
+                    try {
+                      setIsDeleting(true);
+                      console.log('계정 삭제 API 호출 시작');
+                      
+                      const result = await deleteUser();
+                      console.log('계정 삭제 성공:', result);
+                      
+                      Alert.alert(
+                        '계정 삭제 완료',
+                        '계정이 성공적으로 삭제되었습니다.',
+                        [
+                          {
+                            text: '확인',
+                            onPress: () => dispatch(signOut())
+                          }
+                        ]
+                      );
+                    } catch (error) {
+                      console.error('계정 삭제 실패:', error);
+                      const errorMessage = error instanceof Error ? error.message : '계정 삭제에 실패했습니다.';
+                      Alert.alert('삭제 실패', errorMessage);
+                    } finally {
+                      setIsDeleting(false);
+                    }
                   }
                 }
               ]
@@ -285,7 +308,11 @@ const SettingsScreen: React.FC = () => {
               <View style={styles.actionIcon}>
                 <Feather name="trash-2" size={20} color="#EF4444" />
               </View>
-              <Text style={styles.deleteButtonText}>계정 삭제</Text>
+              {isDeleting ? (
+                <ActivityIndicator color="#EF4444" size="small" style={{ flex: 1 }} />
+              ) : (
+                <Text style={styles.deleteButtonText}>계정 삭제</Text>
+              )}
             </TouchableOpacity>
           </Card>
         </View>

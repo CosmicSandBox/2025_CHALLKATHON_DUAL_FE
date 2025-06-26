@@ -22,6 +22,7 @@ import {
 } from './types';
 import { bodyParts, symptomLevels } from './mock';
 import { usePainRecords } from '../../../hooks/usePainRecords';
+import { recordPainManual } from '../../../api';
 import { styles } from './PainRecordScreen.styled';
 
 type PainRecordScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
@@ -37,8 +38,20 @@ const PainRecordScreen: React.FC = () => {
     back: null,
   });
   const [detailNotes, setDetailNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { painHistory: painData, loading, error, refreshRecords } = usePainRecords();
+  // 통증 기록 조회용 날짜 범위 (최근 30일)
+  const getDateRange = () => {
+    const today = new Date();
+    const endDate = today.toISOString().split('T')[0];
+    const monthAgo = new Date(today);
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+    const startDate = monthAgo.toISOString().split('T')[0];
+    return { startDate, endDate };
+  };
+
+  const { startDate, endDate } = getDateRange();
+  const { painHistory: painData, loading, error, refreshRecords } = usePainRecords({ startDate, endDate });
 
   if (loading && selectedTab === 'history') {
     return (
@@ -87,19 +100,57 @@ const PainRecordScreen: React.FC = () => {
     }
   };
 
-  const saveAndExit = () => {
-    Alert.alert(
-      '기록 완료',
-      '통증 기록이 저장되었습니다.',
-      [{
-        text: '확인',
-        onPress: () => {
-          setSymptoms({ leg: null, knee: null, ankle: null, heel: null, back: null });
-          setDetailNotes('');
-          setSelectedTab('history');
+  const saveAndExit = async () => {
+    try {
+      setIsSubmitting(true);
+
+      // 증상 레벨을 점수로 변환 (none: 0, mild: 1, moderate: 2, severe: 3)
+      const levelToScore = (level: SymptomLevel | null): number => {
+        if (!level) return 0;
+        switch (level) {
+          case 'none': return 0;
+          case 'mild': return 1;
+          case 'moderate': return 2;
+          case 'severe': return 3;
+          default: return 0;
         }
-      }]
-    );
+      };
+
+      const painRecord = {
+        legPainScore: levelToScore(symptoms.leg),
+        kneePainScore: levelToScore(symptoms.knee),
+        anklePainScore: levelToScore(symptoms.ankle),
+        heelPainScore: levelToScore(symptoms.heel),
+        backPainScore: levelToScore(symptoms.back),
+        notes: detailNotes || undefined,
+      };
+
+      console.log('통증 기록 전송:', painRecord);
+      
+      const result = await recordPainManual(painRecord);
+      console.log('통증 기록 성공:', result);
+
+      Alert.alert(
+        '기록 완료',
+        result || '통증 기록이 저장되었습니다.',
+        [{
+          text: '확인',
+          onPress: () => {
+            setSymptoms({ leg: null, knee: null, ankle: null, heel: null, back: null });
+            setDetailNotes('');
+            setSelectedTab('history');
+            // 히스토리 새로고침
+            refreshRecords();
+          }
+        }]
+      );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '통증 기록 저장에 실패했습니다.';
+      console.error('통증 기록 저장 오류:', err);
+      Alert.alert('저장 실패', errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderPainRecordTab = () => (
@@ -211,20 +262,26 @@ const PainRecordScreen: React.FC = () => {
             getSelectedCount() === bodyParts.length ? styles.submitButtonActive : styles.submitButtonInactive
           ]} 
           onPress={handleSubmit}
-          disabled={getSelectedCount() < bodyParts.length}
+          disabled={getSelectedCount() < bodyParts.length || isSubmitting}
         >
-          <Text style={[
-            styles.submitButtonText,
-            getSelectedCount() === bodyParts.length ? styles.submitButtonTextActive : styles.submitButtonTextInactive
-          ]}>
-            통증 상태 기록 완료
-          </Text>
-          <Feather 
-            name="check" 
-            size={20} 
-            color={getSelectedCount() === bodyParts.length ? "#FFFFFF" : "#A3A8AF"} 
-            style={styles.submitButtonIcon} 
-          />
+          {isSubmitting ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <>
+              <Text style={[
+                styles.submitButtonText,
+                getSelectedCount() === bodyParts.length ? styles.submitButtonTextActive : styles.submitButtonTextInactive
+              ]}>
+                통증 상태 기록 완료
+              </Text>
+              <Feather 
+                name="check" 
+                size={20} 
+                color={getSelectedCount() === bodyParts.length ? "#FFFFFF" : "#A3A8AF"} 
+                style={styles.submitButtonIcon} 
+              />
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>
