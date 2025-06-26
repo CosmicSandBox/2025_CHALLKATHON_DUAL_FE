@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logout as apiLogout } from '../../api';
 
 export type UserRole = 'patient' | 'caregiver';
 
@@ -75,6 +76,25 @@ export const saveOnboardingCompleted = createAsyncThunk(
   }
 );
 
+// 로그아웃 async thunk
+export const performLogout = createAsyncThunk(
+  'auth/performLogout',
+  async () => {
+    try {
+      // AsyncStorage에서 인증 정보 제거
+      await AsyncStorage.multiRemove(['userToken', 'userRole']);
+      
+      // API 클라이언트에서 토큰 제거
+      apiLogout();
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to logout:', error);
+      throw error;
+    }
+  }
+);
+
 export const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -99,6 +119,12 @@ export const authSlice = createSlice({
     completeOnboarding: (state) => {
       state.onboardingComplete = true;
     },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -111,6 +137,16 @@ export const authSlice = createSlice({
       })
       .addCase(saveOnboardingCompleted.fulfilled, (state) => {
         state.onboardingComplete = true;
+      })
+      .addCase(performLogout.fulfilled, (state) => {
+        state.userToken = null;
+        state.userRole = null;
+        state.onboardingComplete = false;
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(performLogout.rejected, (state, action) => {
+        state.error = action.error.message || 'Logout failed';
       });
   },
 });
@@ -121,6 +157,8 @@ export const {
   signOut,
   setRole,
   completeOnboarding,
+  setLoading,
+  setError,
 } = authSlice.actions;
 
-export default authSlice.reducer; 
+export default authSlice.reducer;

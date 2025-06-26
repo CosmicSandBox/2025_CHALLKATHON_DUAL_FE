@@ -13,6 +13,7 @@ export const Colors = {
   // Background Colors
   background: '#FFFFFF',
   backgroundSecondary: '#F5F5F5',
+  surface: '#FAFAFA',
   
   // Status Colors
   success: '#4CAF50',
@@ -35,4 +36,4 @@ export const Colors = {
   chartSecondary: '#A5D6A7',
   chartTertiary: '#E8F5E9',
   chartQuaternary: '#C8E6C9',
-} as const; 
+} as const;

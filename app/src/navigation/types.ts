@@ -1,21 +1,10 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
 
 export type RootStackParamList = {
-  RoleSelection: undefined;
-  Auth: undefined;
-  OnboardingNavigator: undefined;
-  OnboardingFlow: undefined;
-  Main: undefined;
-  Caregiver: undefined;
-  IndoorExercise: undefined;
-  OutdoorExercise: undefined;
-  Settings: undefined;
-  WalkingMeasurement: undefined;
-  StretchingMeasurement: undefined;
-  StandingMeasurement: undefined;
-  SittingMeasurement: undefined;
-  BalanceMeasurement: undefined;
-  WalkingSupportMeasurement: undefined;
+  OnboardingNavigator: NavigatorScreenParams<OnboardingStackParamList>;
+  Auth: NavigatorScreenParams<AuthStackParamList>;
+  Main: NavigatorScreenParams<MainTabParamList>;
+  Caregiver: NavigatorScreenParams<CaregiverStackParamList>;
 };
 
 export type AuthStackParamList = {
@@ -33,8 +22,8 @@ export type OnboardingStackParamList = {
 
 export type MainTabParamList = {
   Dashboard: undefined;
-  Indoor: undefined;
-  Outdoor: undefined;
+  Indoor: NavigatorScreenParams<IndoorStackParamList>;
+  Outdoor: NavigatorScreenParams<OutdoorStackParamList>;
   Settings: undefined;
   PainRecord: undefined;
   ExerciseHistory: undefined;
@@ -60,8 +49,7 @@ export type OutdoorStackParamList = {
 };
 
 export type CaregiverStackParamList = {
-  CaregiverIndoorDashboard: undefined;
-  CaregiverIndoorHistory: undefined;
-  CaregiverOutdoorLive: undefined;
-  CaregiverOutdoorHistory: undefined;
-}; 
+  CaregiverDashboard: undefined;
+  Notifications: undefined;
+  PatientDetail: undefined;
+};
