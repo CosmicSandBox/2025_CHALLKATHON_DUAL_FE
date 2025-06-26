@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Button } from '../common/Button'
 import { Typography } from '../common/Typography'
 import { theme } from '../../styles/theme'
+import { useRef } from 'react'
 import { 
   Footprints, 
   Heart, 
@@ -10,7 +11,7 @@ import {
   Smartphone,
   Star,
   Download,
-  ArrowRight
+  ArrowDown
 } from 'lucide-react'
 
 const LandingContainer = styled.div`
@@ -204,7 +205,16 @@ interface LandingPageProps {
   onDownloadApp: () => void
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onDownloadApp }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted: _onGetStarted, onDownloadApp }) => {
+  // onGetStarted는 나중에 실제 웹앱으로 연결할 때 사용 예정
+  const downloadSectionRef = useRef<HTMLElement>(null)
+  
+  const handleScrollToDownload = () => {
+    downloadSectionRef.current?.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    })
+  }
   return (
     <LandingContainer>
       <HeroSection
@@ -248,10 +258,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onDownlo
             variant="primary"
             size="large"
             fullWidth
-            onClick={onGetStarted}
+            onClick={handleScrollToDownload}
           >
             지금 시작하기
-            <ArrowRight size={20} style={{ marginLeft: '8px' }} />
+            <ArrowDown size={20} style={{ marginLeft: '8px' }} />
           </CTAButton>
         </motion.div>
       </HeroSection>
@@ -432,6 +442,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onDownlo
       </TestimonialSection>
 
       <DownloadSection
+        ref={downloadSectionRef}
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
