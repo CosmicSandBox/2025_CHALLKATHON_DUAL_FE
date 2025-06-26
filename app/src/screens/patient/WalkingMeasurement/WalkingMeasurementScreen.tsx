@@ -2,25 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   SafeAreaView,
   TouchableOpacity,
   Alert,
   Animated,
   AppState,
-  AppStateStatus, // 타입 추가
+  AppStateStatus,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Card from '../../components/common/Card';
-import { Colors } from '../../constants/colors';
-import { Typography } from '../../constants/typography';
-import { Spacing } from '../../constants/spacing';
-import { IndoorStackParamList } from '../../navigation/types';
 import { Feather } from '@expo/vector-icons';
 import { Pedometer } from 'expo-sensors';
-
-type WalkingMeasurementScreenNavigationProp = NativeStackNavigationProp<IndoorStackParamList, 'WalkingMeasurement'>;
+import Card from '../../../components/common/Card';
+import { styles } from './WalkingMeasurementScreen.styled';
+import { 
+  WalkingMeasurementScreenNavigationProp,
+  WalkingStats,
+  PedometerResult,
+  WalkingState
+} from './types';
+import { instructionSteps, walkingConstants } from './mock';
 
 const WalkingMeasurementScreen: React.FC = () => {
   const navigation = useNavigation<WalkingMeasurementScreenNavigationProp>();
@@ -32,12 +32,12 @@ const WalkingMeasurementScreen: React.FC = () => {
   const [pace, setPace] = useState(0);
   const [isPedometerAvailable, setIsPedometerAvailable] = useState<boolean | null>(null);
   const [pedometerError, setPedometerError] = useState<string | null>(null);
-  const [startTimestamp, setStartTimestamp] = useState<number | null>(null); // 추가
+  const [startTimestamp, setStartTimestamp] = useState<number | null>(null);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pedometerSubscription = useRef<any>(null);
-  const appState = useRef<AppStateStatus>(AppState.currentState); // 타입 명시
+  const appState = useRef<AppStateStatus>(AppState.currentState);
 
   // 펄스 애니메이션
   const startPulseAnimation = () => {
@@ -93,7 +93,6 @@ const WalkingMeasurementScreen: React.FC = () => {
   useEffect(() => {
     const initializePedometer = async () => {
       try {
-        // 센서 지원 여부 확인
         const isAvailable = await Pedometer.isAvailableAsync();
         setIsPedometerAvailable(isAvailable);
         
@@ -102,7 +101,6 @@ const WalkingMeasurementScreen: React.FC = () => {
           return;
         }
 
-        // 권한 요청
         if (Pedometer.requestPermissionsAsync) {
           const { status } = await Pedometer.requestPermissionsAsync();
           if (status !== 'granted') {
@@ -127,21 +125,20 @@ const WalkingMeasurementScreen: React.FC = () => {
     try {
       console.log('Starting pedometer subscription...');
       
-      // 현재 걸음 수를 기준점으로 설정
       const startTime = new Date();
       
-      pedometerSubscription.current = Pedometer.watchStepCount(result => {
+      pedometerSubscription.current = Pedometer.watchStepCount((result: PedometerResult) => {
         console.log('Pedometer update:', result);
         const currentSteps = result.steps;
         
         setSteps(currentSteps);
         
-        // 평균 보폭 70cm로 거리 계산 (미터 단위)
-        const distanceInMeters = Math.round(currentSteps * 0.7 * 100) / 100;
+        // 평균 보폭으로 거리 계산 (미터 단위)
+        const distanceInMeters = Math.round(currentSteps * walkingConstants.averageStepLength * 100) / 100;
         setDistance(distanceInMeters);
         
-        // 평균 체중 65kg 기준, 걸음당 약 0.045kcal 계산
-        const caloriesBurned = Math.round(currentSteps * 0.045 * 100) / 100;
+        // 칼로리 계산
+        const caloriesBurned = Math.round(currentSteps * walkingConstants.caloriesPerStep * 100) / 100;
         setCalories(caloriesBurned);
       });
       
@@ -151,7 +148,6 @@ const WalkingMeasurementScreen: React.FC = () => {
       const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
       setPedometerError('걸음 수 센서 구독 중 오류가 발생했습니다: ' + errorMessage);
       
-      // 시뮬레이터나 센서가 없는 경우 더미 데이터 사용
       console.log('Starting dummy data simulation...');
       startDummyData();
     }
@@ -161,27 +157,24 @@ const WalkingMeasurementScreen: React.FC = () => {
   const startDummyData = () => {
     let simulatedSteps = 0;
     pedometerSubscription.current = setInterval(() => {
-      simulatedSteps += Math.floor(Math.random() * 3) + 1; // 1-3 걸음씩 증가
+      simulatedSteps += Math.floor(Math.random() * walkingConstants.maxStepsPerInterval) + walkingConstants.minStepsPerInterval;
       
       setSteps(simulatedSteps);
       
-      // 평균 보폭 70cm로 거리 계산
-      const distanceInMeters = Math.round(simulatedSteps * 0.7 * 100) / 100;
+      const distanceInMeters = Math.round(simulatedSteps * walkingConstants.averageStepLength * 100) / 100;
       setDistance(distanceInMeters);
       
-      // 칼로리 계산
-      const caloriesBurned = Math.round(simulatedSteps * 0.045 * 100) / 100;
+      const caloriesBurned = Math.round(simulatedSteps * walkingConstants.caloriesPerStep * 100) / 100;
       setCalories(caloriesBurned);
       
       console.log('Dummy data:', { steps: simulatedSteps, distance: distanceInMeters, calories: caloriesBurned });
-    }, 1500); // 1.5초마다 업데이트
+    }, walkingConstants.simulationInterval);
   };
 
   const unsubscribePedometer = () => {
     if (pedometerSubscription.current) {
       console.log('Unsubscribing from pedometer...');
       
-      // 실제 센서 구독 해제 또는 더미 데이터 interval 해제
       if (typeof pedometerSubscription.current.remove === 'function') {
         pedometerSubscription.current.remove();
       } else {
@@ -201,7 +194,6 @@ const WalkingMeasurementScreen: React.FC = () => {
 
     console.log('Starting walking measurement...');
     
-    // 모든 상태 초기화
     setIsWalking(true);
     setSteps(0);
     setDistance(0);
@@ -213,13 +205,8 @@ const WalkingMeasurementScreen: React.FC = () => {
     const now = Date.now();
     setStartTimestamp(now);
     
-    // 타이머 시작
     startTimer();
-    
-    // 걸음 수 측정 시작
     subscribePedometer();
-    
-    // 애니메이션 시작
     startPulseAnimation();
     
     console.log('Walking measurement started successfully');
@@ -241,7 +228,6 @@ const WalkingMeasurementScreen: React.FC = () => {
             unsubscribePedometer();
             stopPulseAnimation();
             
-            // 건강 상태 체크로 이동
             navigation.navigate('HealthCheck', {
               exerciseName: '가벼운 걷기',
               exerciseType: 'walking'
@@ -299,13 +285,11 @@ const WalkingMeasurementScreen: React.FC = () => {
         isWalking &&
         startTimestamp
       ) {
-        // 포그라운드 복귀 시 실제 경과 시간 보정
         const now = Date.now();
         const actualElapsed = Math.floor((now - startTimestamp) / 1000);
         console.log('Correcting elapsed time to:', actualElapsed);
         setElapsedTime(actualElapsed);
         
-        // 타이머 재시작 (정확한 시간 계산을 위해)
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
@@ -326,10 +310,9 @@ const WalkingMeasurementScreen: React.FC = () => {
     };
   }, [isWalking, startTimestamp]);
 
-  // 페이스 계산: steps, elapsedTime이 바뀔 때마다 계산
+  // 페이스 계산
   useEffect(() => {
     if (isWalking && elapsedTime > 0 && steps > 0) {
-      // 분당 걸음 수 계산
       const pacePerMinute = Math.round((steps * 60) / elapsedTime);
       setPace(pacePerMinute);
       console.log(`Pace calculated: ${steps} steps in ${elapsedTime}s = ${pacePerMinute} steps/min`);
@@ -444,30 +427,14 @@ const WalkingMeasurementScreen: React.FC = () => {
         <Card style={styles.instructionCard}>
           <Text style={styles.instructionTitle}>걷기 방법</Text>
           <View style={styles.instructionSteps}>
-            <View style={styles.stepItem}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>1</Text>
+            {instructionSteps.map((step) => (
+              <View key={step.number} style={styles.stepItem}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>{step.number}</Text>
+                </View>
+                <Text style={styles.stepText}>{step.text}</Text>
               </View>
-              <Text style={styles.stepText}>편안한 자세로 서서 준비합니다</Text>
-            </View>
-            <View style={styles.stepItem}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>2</Text>
-              </View>
-              <Text style={styles.stepText}>천천히 한 걸음씩 내딛습니다</Text>
-            </View>
-            <View style={styles.stepItem}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>3</Text>
-              </View>
-              <Text style={styles.stepText}>무리하지 말고 본인의 페이스를 유지합니다</Text>
-            </View>
-            <View style={styles.stepItem}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>4</Text>
-              </View>
-              <Text style={styles.stepText}>통증이나 불편함이 있으면 즉시 중단합니다</Text>
-            </View>
+            ))}
           </View>
         </Card>
       </View>
@@ -493,233 +460,5 @@ const WalkingMeasurementScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-    paddingTop: Spacing.sectionSpacing,
-    paddingBottom: Spacing.sectionSpacing,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 16,
-    backgroundColor: '#F8F9FA',
-  },
-  backButton: {
-    marginRight: 8,
-    marginTop: 0,
-  },
-  headerTextContainer: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#222',
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#A3A8AF',
-    fontWeight: '400',
-  },
-  updateIndicator: {
-    fontSize: 12,
-    color: '#4CAF50',
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  measurementSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-    marginBottom: Spacing.sectionSpacing,
-  },
-  measurementCard: {
-    padding: Spacing.padding,
-    alignItems: 'center',
-  },
-  statusContainer: {
-    alignItems: 'center',
-    marginBottom: Spacing.componentSpacing,
-  },
-  walkingIndicator: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.primary + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  walkingIcon: {
-    fontSize: 40,
-  },
-  statusText: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    fontWeight: '600',
-  },
-  mainStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.componentSpacing,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    ...Typography.h1,
-    color: Colors.textPrimary,
-    fontWeight: '700',
-    marginBottom: Spacing.xs,
-  },
-  statLabel: {
-    ...Typography.body,
-    color: Colors.textLight,
-  },
-  statDivider: {
-    width: 1,
-    height: 60,
-    backgroundColor: Colors.borderLight,
-    marginHorizontal: Spacing.componentSpacing,
-  },
-  secondaryStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
-  secondaryStatItem: {
-    alignItems: 'center',
-  },
-  secondaryStatValue: {
-    ...Typography.h3,
-    color: Colors.primary,
-    fontWeight: '700',
-    marginBottom: Spacing.xs,
-  },
-  secondaryStatLabel: {
-    ...Typography.caption,
-    color: Colors.textLight,
-  },
-  instructionSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-    marginBottom: Spacing.sectionSpacing,
-  },
-  instructionCard: {
-    padding: Spacing.padding,
-  },
-  instructionTitle: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    fontWeight: '600',
-    marginBottom: Spacing.componentSpacing,
-  },
-  instructionSteps: {
-    gap: Spacing.componentSpacing,
-  },
-  stepItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  stepNumber: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.sm,
-    marginTop: 2,
-  },
-  stepNumberText: {
-    ...Typography.caption,
-    color: Colors.background,
-    fontWeight: '600',
-  },
-  stepText: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    flex: 1,
-    lineHeight: 20,
-  },
-  actionSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-  },
-  startButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: Spacing.cardRadius,
-    paddingVertical: Spacing.paddingLarge,
-    alignItems: 'center',
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  startButtonText: {
-    ...Typography.body,
-    color: Colors.background,
-    fontWeight: '600',
-  },
-  stopButton: {
-    backgroundColor: '#F44336',
-    borderRadius: Spacing.cardRadius,
-    paddingVertical: Spacing.paddingLarge,
-    alignItems: 'center',
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  stopButtonText: {
-    ...Typography.body,
-    color: Colors.background,
-    fontWeight: '600',
-  },
-  errorContainer: {
-    backgroundColor: '#FFEBEE',
-    padding: Spacing.sm,
-    margin: Spacing.sm,
-    borderRadius: Spacing.xs,
-    borderLeftWidth: 4,
-    borderLeftColor: '#F44336',
-  },
-  errorText: {
-    color: '#D32F2F',
-    textAlign: 'center',
-    ...Typography.body,
-  },
-  infoContainer: {
-    backgroundColor: '#E3F2FD',
-    padding: Spacing.sm,
-    margin: Spacing.sm,
-    borderRadius: Spacing.xs,
-    borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
-  },
-  infoText: {
-    color: '#1976D2',
-    textAlign: 'center',
-    ...Typography.body,
-  },
-  successContainer: {
-    backgroundColor: '#E8F5E8',
-    padding: Spacing.sm,
-    margin: Spacing.sm,
-    borderRadius: Spacing.xs,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
-  },
-  successText: {
-    color: '#388E3C',
-    textAlign: 'center',
-    ...Typography.body,
-  },
-});
 
 export default WalkingMeasurementScreen;
