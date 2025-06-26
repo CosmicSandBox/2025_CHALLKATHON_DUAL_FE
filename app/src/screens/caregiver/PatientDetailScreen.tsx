@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,47 +6,69 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { getGuardianPatientDetail, GuardianPatientDetail } from '../../api';
 import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 
 const PatientDetailScreen: React.FC = () => {
-  // 1명의 환자 정보
-  const patient = {
-    id: '1',
-    name: '홍길동',
-    age: 65,
-    condition: '뇌졸중 후유증',
-    status: 'online',
-    lastUpdate: '10분 전',
-    todaySteps: 3247,
-    todayExercise: 45,
-    painLevel: 3,
-    mood: '좋음',
-    needsAttention: false,
-    phone: '010-1234-5678',
-    emergencyContact: '010-9876-5432',
-    assignedDate: '2024-01-15',
-    progress: 75,
-    address: '서울시 강남구 테헤란로 123',
-    emergencyContactName: '홍철수 (아들)',
-    doctor: '김재활 전문의',
-    hospital: '서울대학교병원',
-    hospitalPhone: '02-1234-5678',
-    notes: '매일 오후 3시에 약물 복용 확인 필요',
+  const [patientData, setPatientData] = useState<GuardianPatientDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadPatientDetail();
+  }, []);
+
+  const loadPatientDetail = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getGuardianPatientDetail();
+      setPatientData(data);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '환자 정보를 불러오는데 실패했습니다.';
+      setError(errorMessage);
+      console.error('환자 상세 정보 로딩 오류:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const weeklyStats = [
-    { day: '월', steps: 2800, exercise: 40, pain: 2 },
-    { day: '화', steps: 3200, exercise: 45, pain: 3 },
-    { day: '수', steps: 2900, exercise: 35, pain: 2 },
-    { day: '목', steps: 3500, exercise: 50, pain: 4 },
-    { day: '금', steps: 3100, exercise: 42, pain: 3 },
-    { day: '토', steps: 3800, exercise: 55, pain: 2 },
-    { day: '일', steps: 3247, exercise: 45, pain: 3 },
-  ];
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#2196F3" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>환자 정보를 불러오는 중...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !patientData) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 16 }}>정보 로딩 실패</Text>
+        <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20 }}>
+          {error || '환자 정보를 불러올 수 없습니다.'}
+        </Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#2196F3',
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderRadius: 8,
+          }}
+          onPress={loadPatientDetail}
+        >
+          <Text style={{ color: 'white', fontSize: 16 }}>다시 시도</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     return status === 'online' ? '#4CAF50' : '#9E9E9E';
@@ -59,11 +81,11 @@ const PatientDetailScreen: React.FC = () => {
   };
 
   const handleCallPatient = () => {
-    console.log('환자에게 전화:', patient.phone);
+    console.log('환자에게 전화:', patientData?.contactInfo.phoneNumber);
   };
 
   const handleEmergencyCall = () => {
-    console.log('긴급 연락처:', patient.emergencyContact);
+    console.log('긴급 연락처:', patientData?.contactInfo.emergencyContact);
   };
 
   return (
@@ -87,13 +109,13 @@ const PatientDetailScreen: React.FC = () => {
               </View>
               <View style={styles.patientInfo}>
                 <Text style={styles.patientName}>
-                  {patient.name} ({patient.age}세)
+                  {patientData.patientInfo.patientName} ({patientData.patientInfo.patientAge}세)
                 </Text>
-                <Text style={styles.patientCondition}>{patient.condition}</Text>
+                <Text style={styles.patientCondition}>{patientData.patientInfo.disease}</Text>
                 <View style={styles.patientStatus}>
-                  <View style={[styles.statusDot, { backgroundColor: getStatusColor(patient.status) }]} />
-                  <Text style={[styles.statusText, { color: getStatusColor(patient.status) }]}>
-                    {patient.status === 'online' ? '온라인' : '오프라인'} • 마지막 업데이트: {patient.lastUpdate}
+                  <View style={[styles.statusDot, { backgroundColor: '#4CAF50' }]} />
+                  <Text style={[styles.statusText, { color: '#4CAF50' }]}>
+                    연동됨 • 최근 업데이트
                   </Text>
                 </View>
               </View>
@@ -111,7 +133,7 @@ const PatientDetailScreen: React.FC = () => {
               </View>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactTitle}>환자 연락처</Text>
-                <Text style={styles.contactValue}>{patient.phone}</Text>
+                <Text style={styles.contactValue}>{patientData.contactInfo.phoneNumber}</Text>
               </View>
               <Text style={styles.contactArrow}>›</Text>
             </TouchableOpacity>
@@ -122,8 +144,8 @@ const PatientDetailScreen: React.FC = () => {
               </View>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactTitle}>긴급 연락처</Text>
-                <Text style={styles.contactValue}>{patient.emergencyContactName}</Text>
-                <Text style={styles.contactSubValue}>{patient.emergencyContact}</Text>
+                <Text style={styles.contactValue}>긴급 연락처</Text>
+                <Text style={styles.contactSubValue}>{patientData.contactInfo.emergencyContact}</Text>
               </View>
               <Text style={styles.contactArrow}>›</Text>
             </TouchableOpacity>
@@ -137,25 +159,25 @@ const PatientDetailScreen: React.FC = () => {
             <View style={styles.weeklyHeader}>
               <Text style={styles.weeklyTitle}>주간 걸음 수</Text>
               <Text style={styles.weeklyTotal}>
-                {weeklyStats.reduce((sum, day) => sum + day.steps, 0).toLocaleString()} 걸음
+                {Object.values(patientData.weeklyProgress).reduce((sum: number, steps: number) => sum + steps, 0).toLocaleString()} 걸음
               </Text>
             </View>
             <View style={styles.weeklyBars}>
-              {weeklyStats.map((day, index) => (
+              {Object.entries(patientData.weeklyProgress).map(([day, steps], index) => (
                 <View key={index} style={styles.weeklyBarContainer}>
                   <View style={styles.weeklyBar}>
                     <View 
                       style={[
                         styles.weeklyBarFill, 
                         { 
-                          height: `${(day.steps / 4000) * 100}%`,
-                          backgroundColor: day.steps >= 3000 ? Colors.primary : Colors.accent
+                          height: `${Math.min((steps / 4000) * 100, 100)}%`,
+                          backgroundColor: steps >= 3000 ? Colors.primary : Colors.accent
                         }
                       ]} 
                     />
                   </View>
-                  <Text style={styles.weeklyDay}>{day.day}</Text>
-                  <Text style={styles.weeklySteps}>{day.steps.toLocaleString()}</Text>
+                  <Text style={styles.weeklyDay}>{day}</Text>
+                  <Text style={styles.weeklySteps}>{steps.toLocaleString()}</Text>
                 </View>
               ))}
             </View>

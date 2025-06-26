@@ -104,11 +104,11 @@ const PainRecordScreen: React.FC = () => {
     try {
       setIsSubmitting(true);
 
-      // 증상 레벨을 점수로 변환 (none: 0, mild: 1, moderate: 2, severe: 3)
+      // 증상 레벨을 점수로 변환 (good: 0, mild: 1, moderate: 2, severe: 3)
       const levelToScore = (level: SymptomLevel | null): number => {
         if (!level) return 0;
         switch (level) {
-          case 'none': return 0;
+          case 'good': return 0;
           case 'mild': return 1;
           case 'moderate': return 2;
           case 'severe': return 3;

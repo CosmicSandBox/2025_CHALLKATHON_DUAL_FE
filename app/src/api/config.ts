@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
     LINK_PATIENT: '/api/guardian/link-patient',
     DASHBOARD: '/api/guardian/dashboard',
     PATIENT_DETAIL: '/api/guardian/patient-detail',
+    NOTIFICATIONS: '/api/guardian/notifications',
     ALERT_READ: '/api/guardian/alert/{alertId}/read',
   },
 } as const;
@@ -328,6 +329,20 @@ export interface GuardianPatientDetail {
     emergencyContact: string;
   };
   weeklyProgress: WeeklySteps;
+}
+
+// 알림 관련 타입
+export interface GuardianNotification {
+  alertId: string;
+  type: 'urgent' | 'warning' | 'info';
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+}
+
+export interface GuardianNotificationList {
+  notifications: GuardianNotification[];
 }
 
 

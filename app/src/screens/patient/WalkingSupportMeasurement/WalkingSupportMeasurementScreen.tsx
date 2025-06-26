@@ -12,6 +12,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import Card from '../../../components/common/Card';
 import { IndoorStackParamList } from '../../../navigation/types';
+import { recordSimpleExercise } from '../../../api';
 import { WalkingSupportMeasurementState } from './types';
 import { 
   WALKING_SUPPORT_CONFIG,
@@ -30,6 +31,8 @@ const WalkingSupportMeasurementScreen: React.FC = () => {
     distance: 0,
     isCompleted: false,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
 
   const handleStart = () => {
     Alert.alert(
@@ -41,34 +44,73 @@ const WalkingSupportMeasurementScreen: React.FC = () => {
           text: '시작하기',
           onPress: () => {
             setState(prev => ({ ...prev, started: true, currentStep: 1 }));
+            setStartTime(Date.now()); // 시작 시간 기록
           },
         },
       ]
     );
   };
 
-  const handleCompleteExercise = () => {
-    Alert.alert(
-      '운동 완료! 🎉',
-      '보행보조 운동을 성공적으로 완료하셨습니다!\n\n안전한 보행 능력이 향상되었어요.',
-      [
-        {
-          text: '확인',
-          onPress: () => {
-            setState({
-              started: false,
-              currentStep: 0,
-              distance: 0,
-              isCompleted: false,
-            });
-            navigation.navigate('HealthCheck', {
-              exerciseName: '보행보조 운동',
-              exerciseType: 'walking_support'
-            });
+  const handleCompleteExercise = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      const totalDuration = startTime ? Math.max(1, Math.floor((Date.now() - startTime) / 60000)) : 5; // 분 단위
+      
+      const exerciseRecord = {
+        exerciseId: 5, // 보행보조 운동 ID  
+        durationMinutes: totalDuration,
+        notes: `보행보조 운동 완료 - 안전한 보행 연습`
+      };
+
+      console.log('보행보조 운동 기록 전송:', exerciseRecord);
+      
+      const result = await recordSimpleExercise(exerciseRecord);
+      console.log('보행보조 운동 기록 성공:', result);
+
+      Alert.alert(
+        '운동 완료! 🎉',
+        '보행보조 운동을 성공적으로 완료하셨습니다!\n\n안전한 보행 능력이 향상되었어요.',
+        [
+          {
+            text: '확인',
+            onPress: () => {
+              setState({
+                started: false,
+                currentStep: 0,
+                distance: 0,
+                isCompleted: false,
+              });
+              navigation.navigate('HealthCheck', {
+                exerciseName: '보행보조 운동',
+                exerciseType: 'walking_support'
+              });
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '운동 기록 저장에 실패했습니다.';
+      console.error('보행보조 운동 기록 저장 오류:', err);
+      Alert.alert(
+        '기록 저장 실패', 
+        errorMessage,
+        [
+          {
+            text: '확인',
+            onPress: () => {
+              // 저장에 실패해도 건강 체크로 이동
+              navigation.navigate('HealthCheck', {
+                exerciseName: '보행보조 운동',
+                exerciseType: 'walking_support'
+              });
+            }
+          }
+        ]
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleGoBack = () => {

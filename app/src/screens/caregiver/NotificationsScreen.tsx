@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { markAlertAsRead } from '../../api';
+import { getGuardianNotifications, markNotificationAsRead, GuardianNotificationList, GuardianNotification } from '../../api';
 import Card from '../../components/common/Card';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
@@ -18,71 +18,61 @@ import { Spacing } from '../../constants/spacing';
 const NotificationsScreen: React.FC = () => {
   const [filterType, setFilterType] = useState<'all' | 'urgent' | 'warning' | 'info'>('all');
   const [isMarkingRead, setIsMarkingRead] = useState<string | null>(null);
+  const [notificationData, setNotificationData] = useState<GuardianNotificationList | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 1명의 환자 정보
-  const patient = {
-    name: '홍길동',
-    age: 65,
-    condition: '뇌졸중 후유증',
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getGuardianNotifications();
+      setNotificationData(data);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '알림을 불러오는데 실패했습니다.';
+      setError(errorMessage);
+      console.error('알림 로딩 오류:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // 해당 환자의 알림들
-  const notifications = [
-    {
-      id: '1',
-      type: 'urgent',
-      title: '통증 수준 증가',
-      message: '통증 수준이 7/10으로 증가했습니다. 즉시 확인이 필요합니다.',
-      time: '5분 전',
-      isRead: false,
-      priority: 'high',
-    },
-    {
-      id: '2',
-      type: 'warning',
-      title: '운동 중단',
-      message: '실외 운동이 예상보다 일찍 종료되었습니다.',
-      time: '15분 전',
-      isRead: false,
-      priority: 'medium',
-    },
-    {
-      id: '3',
-      type: 'info',
-      title: '약물 복용 알림',
-      message: '오후 3시 약물 복용 시간입니다.',
-      time: '30분 전',
-      isRead: true,
-      priority: 'low',
-    },
-    {
-      id: '4',
-      type: 'urgent',
-      title: '낙상 위험 감지',
-      message: '환자의 균형 감각이 불안정합니다. 주의가 필요합니다.',
-      time: '1시간 전',
-      isRead: true,
-      priority: 'high',
-    },
-    {
-      id: '5',
-      type: 'warning',
-      title: '운동 목표 미달성',
-      message: '오늘의 운동 목표를 달성하지 못했습니다.',
-      time: '2시간 전',
-      isRead: true,
-      priority: 'medium',
-    },
-    {
-      id: '6',
-      type: 'info',
-      title: '의료진 상담 예정',
-      message: '내일 오전 10시 담당 의사와 상담이 예정되어 있습니다.',
-      time: '3시간 전',
-      isRead: true,
-      priority: 'low',
-    },
-  ];
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#2196F3" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>알림을 불러오는 중...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !notificationData) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 16 }}>알림 로딩 실패</Text>
+        <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20 }}>
+          {error || '알림을 불러올 수 없습니다.'}
+        </Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#2196F3',
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderRadius: 8,
+          }}
+          onPress={loadNotifications}
+        >
+          <Text style={{ color: 'white', fontSize: 16 }}>다시 시도</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  const notifications = notificationData.notifications;
 
   const filteredNotifications = notifications.filter(notification => {
     if (filterType === 'all') return true;
@@ -115,16 +105,26 @@ const NotificationsScreen: React.FC = () => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return '#F44336';
-      case 'medium': return '#FF9800';
-      case 'low': return '#4CAF50';
-      default: return Colors.primary;
+  const formatTime = (createdAt: string) => {
+    const now = new Date();
+    const notificationTime = new Date(createdAt);
+    const diffMs = now.getTime() - notificationTime.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) {
+      return `${diffDays}일 전`;
+    } else if (diffHours > 0) {
+      return `${diffHours}시간 전`;
+    } else if (diffMins > 0) {
+      return `${diffMins}분 전`;
+    } else {
+      return '방금 전';
     }
   };
 
-  const handleNotificationPress = (notification: any) => {
+  const handleNotificationPress = (notification: GuardianNotification) => {
     console.log('알림 선택:', notification.title);
   };
 
@@ -133,11 +133,20 @@ const NotificationsScreen: React.FC = () => {
       setIsMarkingRead(notificationId);
       console.log('알림 읽음 처리 시작:', notificationId);
       
-      const result = await markAlertAsRead(notificationId);
+      const result = await markNotificationAsRead(notificationId);
       console.log('알림 읽음 처리 성공:', result);
       
-      // TODO: 실제로는 알림 목록을 새로고침해야 함
-      // 현재는 목업 데이터이므로 로그만 출력
+      // 로컬 상태 업데이트
+      if (notificationData) {
+        const updatedNotifications = notificationData.notifications.map(notification =>
+          notification.alertId === notificationId 
+            ? { ...notification, isRead: true }
+            : notification
+        );
+        setNotificationData({ notifications: updatedNotifications });
+      }
+      
+      Alert.alert('성공', '알림이 읽음 처리되었습니다.');
       
     } catch (error) {
       console.error('알림 읽음 처리 실패:', error);
@@ -161,7 +170,7 @@ const NotificationsScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>알림 관리</Text>
-          <Text style={styles.subtitle}>{patient.name} 환자의 알림을 관리하세요</Text>
+          <Text style={styles.subtitle}>환자의 알림을 관리하세요</Text>
         </View>
 
         {/* Patient Info */}
@@ -173,9 +182,9 @@ const NotificationsScreen: React.FC = () => {
               </View>
               <View style={styles.patientInfo}>
                 <Text style={styles.patientName}>
-                  {patient.name} ({patient.age}세)
+                  연동된 환자
                 </Text>
-                <Text style={styles.patientCondition}>{patient.condition}</Text>
+                <Text style={styles.patientCondition}>환자 정보</Text>
               </View>
             </View>
           </Card>
@@ -282,7 +291,7 @@ const NotificationsScreen: React.FC = () => {
           ) : (
             filteredNotifications.map((notification) => (
               <TouchableOpacity 
-                key={notification.id} 
+                key={notification.alertId} 
                 style={styles.notificationCard}
                 onPress={() => handleNotificationPress(notification)}
               >
@@ -301,7 +310,7 @@ const NotificationsScreen: React.FC = () => {
                         {notification.title}
                       </Text>
                       <Text style={styles.notificationTime}>
-                        {notification.time}
+                        {formatTime(notification.createdAt)}
                       </Text>
                     </View>
                     <View style={styles.notificationActions}>
@@ -312,7 +321,7 @@ const NotificationsScreen: React.FC = () => {
                       )}
                       <View style={[
                         styles.priorityIndicator, 
-                        { backgroundColor: getPriorityColor(notification.priority) }
+                        { backgroundColor: getTypeColor(notification.type) }
                       ]} />
                     </View>
                   </View>
@@ -323,11 +332,11 @@ const NotificationsScreen: React.FC = () => {
                   
                   {!notification.isRead && (
                     <TouchableOpacity 
-                      style={[styles.markAsReadButton, isMarkingRead === notification.id && { opacity: 0.5 }]}
-                      onPress={() => handleMarkAsRead(notification.id)}
-                      disabled={isMarkingRead === notification.id}
+                      style={[styles.markAsReadButton, isMarkingRead === notification.alertId && { opacity: 0.5 }]}
+                      onPress={() => handleMarkAsRead(notification.alertId)}
+                      disabled={isMarkingRead === notification.alertId}
                     >
-                      {isMarkingRead === notification.id ? (
+                      {isMarkingRead === notification.alertId ? (
                         <ActivityIndicator color="#666" size="small" />
                       ) : (
                         <Text style={styles.markAsReadText}>읽음 처리</Text>

@@ -3,7 +3,8 @@ import {
   API_ENDPOINTS, 
   LinkPatientRequest, 
   GuardianDashboard, 
-  GuardianPatientDetail 
+  GuardianPatientDetail,
+  GuardianNotificationList
 } from './config';
 
 // 환자 연동
@@ -67,6 +68,39 @@ export const markAlertAsRead = async (alertId: string): Promise<string> => {
     }
   } catch (error) {
     console.error('Error marking alert as read:', error);
+    throw error;
+  }
+};
+
+// 보호자 알림 목록 조회
+export const getGuardianNotifications = async (): Promise<GuardianNotificationList> => {
+  try {
+    const response = await get<GuardianNotificationList>(API_ENDPOINTS.GUARDIAN.NOTIFICATIONS);
+    
+    if (response.status === 'SUCCESS' && response.data) {
+      return response.data;
+    } else {
+      throw new Error('Failed to get guardian notifications');
+    }
+  } catch (error) {
+    console.error('Error getting guardian notifications:', error);
+    throw error;
+  }
+};
+
+// 알림 읽음 표시
+export const markNotificationAsRead = async (alertId: string): Promise<string> => {
+  try {
+    const endpoint = API_ENDPOINTS.GUARDIAN.ALERT_READ.replace('{alertId}', alertId);
+    const response = await put<string>(endpoint, {});
+    
+    if (response.status === 'SUCCESS' && response.data) {
+      return response.data;
+    } else {
+      throw new Error('Failed to mark notification as read');
+    }
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
     throw error;
   }
 };
