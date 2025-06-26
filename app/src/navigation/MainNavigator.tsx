@@ -6,12 +6,12 @@ import { RootState } from '../store';
 import { Feather } from '@expo/vector-icons';
 
 // Screens
-import DashboardScreen from '../screens/patient/DashboardScreen';
+import DashboardScreen from '../screens/patient/Dashboard/DashboardScreen';
 import IndoorNavigator from './IndoorNavigator';
-import OutdoorExerciseScreen from '../screens/patient/OutdoorExerciseScreen';
+import OutdoorExerciseScreen from '../screens/patient/OutdoorExercise/OutdoorExerciseScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
-import PainRecordScreen from '../screens/patient/PainRecordScreen';
-import ExerciseHistoryScreen from '../screens/patient/ExerciseHistoryScreen';
+import PainRecordScreen from '../screens/patient/PainRecord/PainRecordScreen';
+import ExerciseHistoryScreen from '../screens/patient/ExerciseHistory/ExerciseHistoryScreen';
 import CaregiverNavigator from './CaregiverNavigator';
 
 import { Colors } from '../constants/colors';

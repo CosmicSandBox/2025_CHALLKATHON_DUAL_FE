@@ -2,186 +2,38 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
-import Card from '../../components/common/Card';
-import { Colors } from '../../constants/colors';
-import { Typography } from '../../constants/typography';
-import { Spacing } from '../../constants/spacing';
-
-const { width: screenWidth } = Dimensions.get('window');
-
-type MainStackParamList = {
-  MainTabs: undefined;
-  PainRecord: undefined;
-  ExerciseHistory: undefined;
-};
+import Card from '../../../components/common/Card';
+import { Colors } from '../../../constants/colors';
+import { 
+  MainStackParamList,
+  ExerciseRecord,
+  WeeklyStats,
+  ExerciseType
+} from './types';
+import {
+  exerciseTypeNames,
+  exerciseIcons,
+  difficultyColors,
+  difficultyNames,
+  mockExerciseHistory
+} from './mock';
+import { styles } from './ExerciseHistoryScreen.styled';
 
 type ExerciseHistoryScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
-
-type ExerciseType = 'indoor' | 'outdoor';
-type IndoorExerciseSubType = 'walking' | 'stretching' | 'balance' | 'sitting' | 'standing' | 'walkingSupport';
-type OutdoorExerciseSubType = 'walking' | 'jogging' | 'cycling';
-
-interface ExerciseRecord {
-  id: string;
-  date: string;
-  time: string;
-  type: ExerciseType;
-  subType: IndoorExerciseSubType | OutdoorExerciseSubType;
-  name: string;
-  duration: number; // 분
-  steps?: number;
-  distance?: number; // km
-  calories?: number;
-  avgHeartRate?: number;
-  maxHeartRate?: number;
-  painBefore?: number; // 1-10
-  painAfter?: number; // 1-10
-  notes?: string;
-  completionRate: number; // 0-100%
-  difficulty: 'easy' | 'normal' | 'hard';
-}
-
-interface WeeklyStats {
-  totalExercises: number;
-  totalDuration: number;
-  totalSteps: number;
-  totalDistance: number;
-  totalCalories: number;
-  averagePain: number;
-}
 
 const ExerciseHistoryScreen: React.FC = () => {
   const navigation = useNavigation<ExerciseHistoryScreenNavigationProp>();
   const [selectedTab, setSelectedTab] = useState<'all' | 'indoor' | 'outdoor'>('all');
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('week');
-
-  // Mock data for exercise history
-  const [exerciseHistory] = useState<ExerciseRecord[]>([
-    {
-      id: '1',
-      date: '2024-01-15',
-      time: '09:30',
-      type: 'indoor',
-      subType: 'walking',
-      name: '실내 걷기 운동',
-      duration: 20,
-      steps: 1847,
-      distance: 1.1,
-      calories: 85,
-      painBefore: 3,
-      painAfter: 2,
-      notes: '무릎 상태가 많이 좋아짐',
-      completionRate: 95,
-      difficulty: 'normal',
-    },
-    {
-      id: '2',
-      date: '2024-01-15',
-      time: '15:45',
-      type: 'indoor',
-      subType: 'stretching',
-      name: '스트레칭',
-      duration: 15,
-      painBefore: 4,
-      painAfter: 2,
-      completionRate: 100,
-      difficulty: 'easy',
-    },
-    {
-      id: '3',
-      date: '2024-01-14',
-      time: '08:15',
-      type: 'outdoor',
-      subType: 'walking',
-      name: '공원 산책',
-      duration: 35,
-      steps: 3247,
-      distance: 2.1,
-      calories: 156,
-      avgHeartRate: 78,
-      maxHeartRate: 92,
-      painBefore: 2,
-      painAfter: 3,
-      notes: '날씨가 좋아서 평소보다 오래 걸었음',
-      completionRate: 100,
-      difficulty: 'normal',
-    },
-    {
-      id: '4',
-      date: '2024-01-13',
-      time: '10:20',
-      type: 'indoor',
-      subType: 'balance',
-      name: '균형 잡기 운동',
-      duration: 12,
-      painBefore: 2,
-      painAfter: 2,
-      completionRate: 80,
-      difficulty: 'hard',
-    },
-    {
-      id: '5',
-      date: '2024-01-12',
-      time: '16:30',
-      type: 'outdoor',
-      subType: 'walking',
-      name: '동네 한바퀴',
-      duration: 25,
-      steps: 2156,
-      distance: 1.4,
-      calories: 98,
-      avgHeartRate: 75,
-      maxHeartRate: 88,
-      painBefore: 3,
-      painAfter: 3,
-      completionRate: 100,
-      difficulty: 'easy',
-    },
-  ]);
-
-  const exerciseTypeNames = {
-    walking: '걷기',
-    stretching: '스트레칭',
-    balance: '균형 잡기',
-    sitting: '앉기/서기',
-    standing: '서기 운동',
-    walkingSupport: '보행 보조',
-    jogging: '조깅',
-    cycling: '자전거',
-  };
-
-  const exerciseIcons = {
-    walking: '🚶‍♂️',
-    stretching: '🧘‍♂️',
-    balance: '⚖️',
-    sitting: '🪑',
-    standing: '🧍‍♂️',
-    walkingSupport: '🦯',
-    jogging: '🏃‍♂️',
-    cycling: '🚴‍♂️',
-  };
-
-  const difficultyColors = {
-    easy: '#4CAF50',
-    normal: '#FF9800',
-    hard: '#F44336',
-  };
-
-  const difficultyNames = {
-    easy: '쉬움',
-    normal: '보통',
-    hard: '어려움',
-  };
+  const [exerciseHistory] = useState<ExerciseRecord[]>(mockExerciseHistory);
 
   const getFilteredExercises = () => {
     let filtered = exerciseHistory;
@@ -404,7 +256,6 @@ const ExerciseHistoryScreen: React.FC = () => {
                         <Text style={styles.metricValue}>{exercise.duration}분</Text>
                       </View>
                       
-                      {/* 실내 걷기와 실외 운동에서는 완주율을 표시하지 않음 */}
                       {!(exercise.type === 'indoor' && exercise.subType === 'walking') && exercise.type !== 'outdoor' && (
                         <View style={styles.metricItem}>
                           <Text style={styles.metricLabel}>완주율</Text>
@@ -558,288 +409,5 @@ const ExerciseHistoryScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 16,
-    backgroundColor: '#F8F9FA',
-  },
-  backButton: {
-    marginRight: 8,
-  },
-  headerTextContainer: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#222',
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#A3A8AF',
-    fontWeight: '400',
-  },
-  filtersContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    borderBottomColor: Colors.primary,
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#A3A8AF',
-  },
-  tabTextActive: {
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  periodContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  periodButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
-  },
-  periodButtonActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  periodText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  periodTextActive: {
-    color: '#FFFFFF',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  statCard: {
-    width: (screenWidth - 64) / 2,
-    padding: 16,
-  },
-  statContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  statInfo: {
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  exerciseList: {
-    gap: 12,
-  },
-  exerciseCard: {
-    marginBottom: 4,
-  },
-  exerciseCardContent: {
-    padding: 16,
-  },
-  exerciseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  exerciseTypeContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  exerciseTypeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  exerciseTypeIcon: {
-    fontSize: 14,
-  },
-  exerciseTypeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  difficultyBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  difficultyText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  exerciseDateTime: {
-    alignItems: 'flex-end',
-  },
-  exerciseDate: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  exerciseTime: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  exerciseInfo: {
-    marginBottom: 12,
-  },
-  exerciseName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 2,
-  },
-  exerciseSubType: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  exerciseMetrics: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    marginBottom: 12,
-  },
-  metricItem: {
-    alignItems: 'center',
-  },
-  metricLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginBottom: 2,
-  },
-  metricValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  painInfo: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  painItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  painLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  painValues: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  painBefore: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#F59E0B',
-  },
-  painArrow: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  painAfter: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#10B981',
-  },
-  painDifference: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  exerciseNotes: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 8,
-    padding: 12,
-  },
-  exerciseNotesLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#6B7280',
-    marginBottom: 4,
-  },
-  exerciseNotesText: {
-    fontSize: 14,
-    color: '#1F2937',
-    lineHeight: 20,
-  },
-  emptyCard: {
-    padding: 32,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#6B7280',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-});
 
 export default ExerciseHistoryScreen;
