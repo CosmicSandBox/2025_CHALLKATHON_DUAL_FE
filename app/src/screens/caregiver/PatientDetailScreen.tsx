@@ -58,22 +58,12 @@ const PatientDetailScreen: React.FC = () => {
     return '#F44336';
   };
 
-  const getPainColor = (painLevel: number) => {
-    if (painLevel <= 3) return '#4CAF50';
-    if (painLevel <= 5) return '#FF9800';
-    return '#F44336';
-  };
-
   const handleCallPatient = () => {
     console.log('환자에게 전화:', patient.phone);
   };
 
   const handleEmergencyCall = () => {
     console.log('긴급 연락처:', patient.emergencyContact);
-  };
-
-  const handleCallHospital = () => {
-    console.log('병원에 전화:', patient.hospitalPhone);
   };
 
   return (
@@ -108,57 +98,7 @@ const PatientDetailScreen: React.FC = () => {
                 </View>
               </View>
             </View>
-
-            {/* Progress Bar */}
-            <View style={styles.progressSection}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>재활 진행률</Text>
-                <Text style={[styles.progressValue, { color: getProgressColor(patient.progress) }]}>
-                  {patient.progress}%
-                </Text>
-              </View>
-              <View style={styles.progressBar}>
-                <View 
-                  style={[
-                    styles.progressFill, 
-                    { 
-                      width: `${patient.progress}%`,
-                      backgroundColor: getProgressColor(patient.progress)
-                    }
-                  ]} 
-                />
-              </View>
-            </View>
           </Card>
-        </View>
-
-        {/* Today's Stats */}
-        <View style={styles.statsSection}>
-          <Text style={styles.sectionTitle}>오늘의 현황</Text>
-          <View style={styles.statsGrid}>
-            <Card style={styles.statCard}>
-              <Text style={styles.statIcon}>👟</Text>
-              <Text style={styles.statValue}>{patient.todaySteps.toLocaleString()}</Text>
-              <Text style={styles.statLabel}>걸음</Text>
-            </Card>
-            <Card style={styles.statCard}>
-              <Text style={styles.statIcon}>⏱️</Text>
-              <Text style={styles.statValue}>{patient.todayExercise}분</Text>
-              <Text style={styles.statLabel}>운동</Text>
-            </Card>
-            <Card style={styles.statCard}>
-              <Text style={styles.statIcon}>😐</Text>
-              <Text style={[styles.statValue, { color: getPainColor(patient.painLevel) }]}>
-                {patient.painLevel}/10
-              </Text>
-              <Text style={styles.statLabel}>통증</Text>
-            </Card>
-            <Card style={styles.statCard}>
-              <Text style={styles.statIcon}>😊</Text>
-              <Text style={styles.statValue}>{patient.mood}</Text>
-              <Text style={styles.statLabel}>기분</Text>
-            </Card>
-          </View>
         </View>
 
         {/* Contact Information */}
@@ -187,39 +127,6 @@ const PatientDetailScreen: React.FC = () => {
               </View>
               <Text style={styles.contactArrow}>›</Text>
             </TouchableOpacity>
-            <View style={styles.divider} />
-            <TouchableOpacity style={styles.contactItem} onPress={handleCallHospital}>
-              <View style={styles.contactIcon}>
-                <Text style={styles.contactIconText}>🏥</Text>
-              </View>
-              <View style={styles.contactInfo}>
-                <Text style={styles.contactTitle}>담당 병원</Text>
-                <Text style={styles.contactValue}>{patient.hospital}</Text>
-                <Text style={styles.contactSubValue}>{patient.hospitalPhone}</Text>
-              </View>
-              <Text style={styles.contactArrow}>›</Text>
-            </TouchableOpacity>
-          </Card>
-        </View>
-
-        {/* Medical Information */}
-        <View style={styles.medicalSection}>
-          <Text style={styles.sectionTitle}>의료 정보</Text>
-          <Card style={styles.medicalCard}>
-            <View style={styles.medicalItem}>
-              <Text style={styles.medicalLabel}>담당 의사</Text>
-              <Text style={styles.medicalValue}>{patient.doctor}</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.medicalItem}>
-              <Text style={styles.medicalLabel}>담당 시작일</Text>
-              <Text style={styles.medicalValue}>{patient.assignedDate}</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.medicalItem}>
-              <Text style={styles.medicalLabel}>주소</Text>
-              <Text style={styles.medicalValue}>{patient.address}</Text>
-            </View>
           </Card>
         </View>
 
@@ -255,48 +162,6 @@ const PatientDetailScreen: React.FC = () => {
           </Card>
         </View>
 
-        {/* Notes */}
-        <View style={styles.notesSection}>
-          <Text style={styles.sectionTitle}>특이사항</Text>
-          <Card style={styles.notesCard}>
-            <Text style={styles.notesText}>{patient.notes}</Text>
-          </Card>
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>빠른 액션</Text>
-          <View style={styles.actionsGrid}>
-            <TouchableOpacity style={styles.actionCard}>
-              <View style={styles.actionIcon}>
-                <Text style={styles.actionIconText}>📊</Text>
-              </View>
-              <Text style={styles.actionTitle}>상세 리포트</Text>
-              <Text style={styles.actionSubtitle}>월간 통계 보기</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionCard}>
-              <View style={styles.actionIcon}>
-                <Text style={styles.actionIconText}>📝</Text>
-              </View>
-              <Text style={styles.actionTitle}>정보 수정</Text>
-              <Text style={styles.actionSubtitle}>환자 정보 변경</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionCard}>
-              <View style={styles.actionIcon}>
-                <Text style={styles.actionIconText}>📅</Text>
-              </View>
-              <Text style={styles.actionTitle}>일정 관리</Text>
-              <Text style={styles.actionSubtitle}>의료 일정 확인</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionCard}>
-              <View style={styles.actionIcon}>
-                <Text style={styles.actionIconText}>🔔</Text>
-              </View>
-              <Text style={styles.actionTitle}>알림 설정</Text>
-              <Text style={styles.actionSubtitle}>알림 관리</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -405,40 +270,11 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 4,
   },
-  statsSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-    marginBottom: Spacing.sectionSpacing,
-  },
   sectionTitle: {
     ...Typography.h2,
     color: Colors.textPrimary,
     marginBottom: Spacing.componentSpacing,
     fontWeight: '600',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  statCard: {
-    width: '48%',
-    padding: Spacing.padding,
-    marginBottom: Spacing.componentSpacing,
-    alignItems: 'center',
-  },
-  statIcon: {
-    fontSize: 24,
-    marginBottom: Spacing.sm,
-  },
-  statValue: {
-    ...Typography.h3,
-    color: Colors.textPrimary,
-    fontWeight: '700',
-    marginBottom: Spacing.xs,
-  },
-  statLabel: {
-    ...Typography.caption,
-    color: Colors.textLight,
   },
   contactSection: {
     paddingHorizontal: Spacing.paddingLarge,
@@ -492,27 +328,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.borderLight,
     marginLeft: 56 + Spacing.componentSpacing,
-  },
-  medicalSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-    marginBottom: Spacing.sectionSpacing,
-  },
-  medicalCard: {
-    padding: 0,
-  },
-  medicalItem: {
-    paddingVertical: Spacing.componentSpacing,
-    paddingHorizontal: Spacing.padding,
-  },
-  medicalLabel: {
-    ...Typography.bodySmall,
-    color: Colors.textLight,
-    marginBottom: Spacing.xs,
-  },
-  medicalValue: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    fontWeight: '500',
   },
   weeklySection: {
     paddingHorizontal: Spacing.paddingLarge,
@@ -571,61 +386,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: Colors.textPrimary,
     fontSize: 10,
-  },
-  notesSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-    marginBottom: Spacing.sectionSpacing,
-  },
-  notesCard: {
-    padding: Spacing.padding,
-  },
-  notesText: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    lineHeight: 20,
-  },
-  actionsSection: {
-    paddingHorizontal: Spacing.paddingLarge,
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  actionCard: {
-    width: '48%',
-    backgroundColor: Colors.background,
-    borderRadius: Spacing.cardRadius,
-    padding: Spacing.padding,
-    marginBottom: Spacing.componentSpacing,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  actionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  actionIconText: {
-    fontSize: 24,
-  },
-  actionTitle: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    fontWeight: '600',
-    marginBottom: Spacing.xs,
-  },
-  actionSubtitle: {
-    ...Typography.caption,
-    color: Colors.textLight,
-    lineHeight: 16,
   },
 });
 

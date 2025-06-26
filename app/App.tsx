@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import * as Linking from 'expo-linking';
+// import * as Linking from 'expo-linking'; // 임시 주석 처리 - ExpoLinking 에러 방지
 import * as Updates from 'expo-updates';
 import { store } from './src/store';
 import RootNavigator from './src/navigation/RootNavigator';
@@ -12,7 +12,8 @@ import { Colors } from './src/constants/colors';
 
 export default function App() {
   useEffect(() => {
-    // 앱이 실행될 때 딥링크 처리
+    // 딥링크 처리 - 임시 주석 처리 (ExpoLinking 네이티브 모듈 에러 방지)
+    /*
     const handleDeepLink = (url: string) => {
       console.log('Deep link received:', url);
     };
@@ -30,6 +31,7 @@ export default function App() {
     });
 
     return () => subscription?.remove();
+    */
   }, []);
 
   useEffect(() => {
