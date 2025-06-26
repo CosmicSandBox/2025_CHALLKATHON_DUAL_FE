@@ -17,12 +17,15 @@ type ViewState = 'landing' | 'download' | 'webapp' | 'dashboard'
 export const AppRouter = () => {
   const [currentView, setCurrentView] = useState<ViewState>('landing')
   const [selectedUserType, setSelectedUserType] = useState<'patient' | 'guardian' | null>(null)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  // 나중에 사용할 예정
+  const [_isLoggedIn, setIsLoggedIn] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleGetStarted = () => {
-    setCurrentView('webapp')  // 바로 웹 체험으로 이동
-  }
+  // const handleGetStarted = () => {
+  //   setCurrentView('webapp')  // 바로 웹 체험으로 이동
+  // }
+
+  const handleGetStarted = () => {} // 임시 빈 함수
 
   const handleDownloadApp = () => {
     setCurrentView('download')  // QR코드 페이지로 이동

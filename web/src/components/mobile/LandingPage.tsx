@@ -202,11 +202,15 @@ const cardVariants = {
 
 interface LandingPageProps {
   onGetStarted: () => void
-  onDownloadApp: () => void
+  onDownloadApp?: () => void  // optional로 변경
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted: _onGetStarted, onDownloadApp }) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted: _onGetStarted, onDownloadApp: _onDownloadApp }) => {
   // onGetStarted는 나중에 실제 웹앱으로 연결할 때 사용 예정
+  // onDownloadApp도 나중에 필요할 수 있어서 보존
+  // 현재는 사용하지 않으므로 _를 붙여서 lint 경고 방지
+  
   const downloadSectionRef = useRef<HTMLElement>(null)
   
   const handleScrollToDownload = () => {
@@ -214,6 +218,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted: _onGetSt
       behavior: 'smooth',
       block: 'start'
     })
+  }
+
+  const handleDownloadApp = () => {
+    // 외부 링크로 이동
+    window.open('http://download.walkmate.klr.kr', '_blank')
   }
   return (
     <LandingContainer>
@@ -462,7 +471,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted: _onGetSt
             variant="secondary"
             size="large"
             fullWidth
-            onClick={onDownloadApp}
+            onClick={handleDownloadApp}
           >
             <Download size={20} style={{ marginRight: '8px' }} />
             워크 메이트 체험하기
